@@ -6,6 +6,13 @@
   <title>个人信息 - 博客管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || 'null');
+    if (!currentUser) {
+      alert('请先登录');
+      location.href = '/1111/login.html';
+    }
+  </script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
     .sidebar { width: 220px; background-color: #304156; min-height: 100vh; position: fixed; left: 0; top: 0; }
@@ -13,6 +20,8 @@
     .sidebar nav { padding: 10px; }
     .sidebar nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: #bfcbd9; text-decoration: none; border-radius: 4px; margin-bottom: 4px; }
     .sidebar nav a:hover, .sidebar nav a.active { background: #1f2d3d; color: #409eff; }
+    .admin-badge { background: #f56c6c; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px; }
+    .user-badge { background: #67c23a; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px; }
     .main-area { margin-left: 220px; }
     .topbar { height: 56px; background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
     .content { padding: 20px; background: #f0f2f5; min-height: calc(100vh - 56px); }
@@ -39,16 +48,16 @@
     <i class="fa fa-pencil-square-o"></i>
     <span>博客管理</span>
   </div>
-  <nav>
+  <nav id="sidebar-nav">
     <a href="dashboard.html"><i class="fa fa-dashboard"></i> 仪表盘</a>
-    <a href="articles.html"><i class="fa fa-file-text"></i> 文章管理</a>
+    <a href="articles.html" class="admin-only"><i class="fa fa-file-text"></i> 文章管理</a>
     <a href="article-edit.html"><i class="fa fa-pencil"></i> 写文章</a>
-    <a href="categories.html"><i class="fa fa-folder"></i> 分类管理</a>
+    <a href="categories.html" class="admin-only"><i class="fa fa-folder"></i> 分类管理</a>
     <a href="comments.html"><i class="fa fa-comments"></i> 评论管理</a>
-    <a href="users.html"><i class="fa fa-users"></i> 用户管理</a>
-    <a href="statistics.html"><i class="fa fa-bar-chart"></i> 数据统计</a>
+    <a href="users.html" class="admin-only"><i class="fa fa-users"></i> 用户管理</a>
+    <a href="statistics.html" class="admin-only"><i class="fa fa-bar-chart"></i> 数据统计</a>
     <a href="profile.html" class="active"><i class="fa fa-user"></i> 个人信息</a>
-    <a href="../index.html" style="margin-top:20px;"><i class="fa fa-sign-out"></i> 退出登录</a>
+    <a href="../index.html" onclick="localStorage.removeItem('current_user');"><i class="fa fa-sign-out"></i> 退出登录</a>
   </nav>
 </aside>
 
@@ -57,46 +66,43 @@
   <header class="topbar">
     <div>
       <span class="text-lg font-semibold text-gray-800">个人信息</span>
+      <span id="role-badge"></span>
     </div>
     <div class="flex items-center gap-3">
-      <span class="text-gray-600">admin</span>
-      <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">A</div>
+      <span class="text-gray-600" id="user-display"></span>
+      <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white" id="user-avatar"></div>
     </div>
   </header>
-  
+
   <main class="content">
     <div class="grid grid-cols-3 gap-4">
       <!-- 左侧信息卡 -->
       <div class="col-span-1 bg-white rounded-lg shadow-sm p-6">
         <div class="avatar-section">
-          <div class="avatar">A</div>
+          <div class="avatar" id="avatar-letter">U</div>
           <button class="change-avatar-btn"><i class="fa fa-camera"></i> 更换头像</button>
         </div>
-        <h4 class="font-semibold text-gray-800 mb-4">基本信息</h4>
+        <h4 class="font-semibold text-gray-800 mb-4 text-center">基本信息</h4>
         <div class="space-y-2">
           <div class="info-row">
             <span class="info-label">用户名</span>
-            <span class="info-value">admin</span>
+            <span class="info-value" id="info-username">-</span>
           </div>
           <div class="info-row">
             <span class="info-label">昵称</span>
-            <span class="info-value">超级管理员</span>
+            <span class="info-value" id="info-nickname">-</span>
           </div>
           <div class="info-row">
             <span class="info-label">角色</span>
-            <span class="info-value">管理员</span>
+            <span class="info-value" id="info-role">-</span>
           </div>
           <div class="info-row">
             <span class="info-label">邮箱</span>
-            <span class="info-value">admin@blog.com</span>
+            <span class="info-value" id="info-email">-</span>
           </div>
           <div class="info-row">
             <span class="info-label">注册时间</span>
-            <span class="info-value">2026-06-01</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">最后登录</span>
-            <span class="info-value">2026-06-06</span>
+            <span class="info-value" id="info-date">-</span>
           </div>
         </div>
       </div>
@@ -111,26 +117,26 @@
           <div class="grid grid-cols-2 gap-4">
             <div class="form-item">
               <label class="form-label">用户名</label>
-              <input type="text" id="username" class="form-input" value="admin" readonly>
+              <input type="text" id="username" class="form-input" readonly>
             </div>
             <div class="form-item">
               <label class="form-label">昵称</label>
-              <input type="text" id="nickname" class="form-input" value="超级管理员">
+              <input type="text" id="nickname" class="form-input">
             </div>
           </div>
 
           <div class="form-item">
             <label class="form-label">邮箱</label>
-            <input type="email" id="email" class="form-input" value="admin@blog.com">
+            <input type="email" id="email" class="form-input" placeholder="请输入邮箱">
           </div>
 
           <div class="form-item">
             <label class="form-label">个人简介</label>
-            <textarea id="bio" class="form-textarea" rows="4">热爱技术，专注于后端开发。</textarea>
+            <textarea id="bio" class="form-textarea" rows="4" placeholder="介绍一下自己"></textarea>
           </div>
 
           <div class="flex justify-end gap-3 mt-8">
-            <button type="button" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" onclick="location.href='profile.html'">取消</button>
+            <button type="button" onclick="location.reload()" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">重置</button>
             <button type="submit" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">保存修改</button>
           </div>
         </form>
@@ -163,20 +169,71 @@
 </div>
 
 <script>
+const user = JSON.parse(localStorage.getItem('current_user') || 'null');
+const isAdmin = user && user.role === 'ADMIN';
+
+// 显示用户信息
+document.getElementById('user-display').textContent = user.nickname || user.username;
+document.getElementById('user-avatar').textContent = (user.nickname || user.username).charAt(0).toUpperCase();
+document.getElementById('avatar-letter').textContent = (user.nickname || user.username).charAt(0).toUpperCase();
+
+// 显示角色标签
+if (isAdmin) {
+  document.getElementById('role-badge').innerHTML = '<span class="admin-badge">管理员</span>';
+} else {
+  document.getElementById('role-badge').innerHTML = '<span class="user-badge">普通用户</span>';
+}
+
+// 隐藏非管理员菜单
+if (!isAdmin) {
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = 'none';
+  });
+}
+
+// 填充表单
+document.getElementById('username').value = user.username || '';
+document.getElementById('nickname').value = user.nickname || '';
+document.getElementById('email').value = user.email || '';
+document.getElementById('bio').value = user.bio || '';
+document.getElementById('info-username').textContent = user.username || '-';
+document.getElementById('info-nickname').textContent = user.nickname || '-';
+document.getElementById('info-role').textContent = isAdmin ? '管理员' : '普通用户';
+document.getElementById('info-email').textContent = user.email || '-';
+document.getElementById('info-date').textContent = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-';
+
+// 保存资料
 document.getElementById('profile-form').addEventListener('submit', function(e) {
   e.preventDefault();
+
+  user.nickname = document.getElementById('nickname').value;
+  user.email = document.getElementById('email').value;
+  user.bio = document.getElementById('bio').value;
+
+  localStorage.setItem('current_user', JSON.stringify(user));
+
+  // 更新用户列表中的信息
+  const users = JSON.parse(localStorage.getItem('blog_users') || '[]');
+  const userIndex = users.findIndex(u => u.id === user.id);
+  if (userIndex !== -1) {
+    users[userIndex] = user;
+    localStorage.setItem('blog_users', JSON.stringify(users));
+  }
+
   alert('个人信息修改成功！');
+  location.reload();
 });
 
+// 修改密码
 document.getElementById('password-form').addEventListener('submit', function(e) {
   e.preventDefault();
-  
+
   const oldPassword = document.getElementById('oldPassword').value;
   const newPassword = document.getElementById('newPassword').value;
   const confirmPassword = document.getElementById('confirmPassword').value;
-  
-  if (!oldPassword) {
-    alert('请输入原密码');
+
+  if (!oldPassword || oldPassword !== user.password) {
+    alert('原密码错误');
     return;
   }
   if (!newPassword || newPassword.length < 6) {
@@ -187,8 +244,20 @@ document.getElementById('password-form').addEventListener('submit', function(e) 
     alert('两次输入的密码不一致');
     return;
   }
-  
+
+  user.password = newPassword;
+  localStorage.setItem('current_user', JSON.stringify(user));
+
+  // 更新用户列表
+  const users = JSON.parse(localStorage.getItem('blog_users') || '[]');
+  const userIndex = users.findIndex(u => u.id === user.id);
+  if (userIndex !== -1) {
+    users[userIndex] = user;
+    localStorage.setItem('blog_users', JSON.stringify(users));
+  }
+
   alert('密码修改成功！');
+  location.reload();
 });
 </script>
 </body>

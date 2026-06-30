@@ -6,6 +6,13 @@
   <title>写文章 - 博客管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || 'null');
+    if (!currentUser) {
+      alert('请先登录');
+      location.href = '/1111/login.html';
+    }
+  </script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
     .sidebar { width: 220px; background-color: #304156; min-height: 100vh; position: fixed; left: 0; top: 0; }

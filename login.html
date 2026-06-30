@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -79,9 +79,12 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
   const user = users.find(u => u.username === username && u.password === password);
   
   if (user) {
-    alert('登录成功！');
     localStorage.setItem('current_user', JSON.stringify(user));
-    location.href = '/1111/admin/dashboard.html';
+    if (user.role === 'ADMIN') {
+      location.href = '/1111/admin/dashboard.html';
+    } else {
+      location.href = '/1111/admin/dashboard.html';
+    }
   } else {
     alert('用户名或密码错误！');
   }
