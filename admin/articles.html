@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -7,7 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
   <script>
-    // 检查管理员权限
     const currentUser = JSON.parse(localStorage.getItem('current_user') || 'null');
     if (!currentUser || currentUser.role !== 'ADMIN') {
       alert('您没有权限访问此页面');
@@ -59,7 +58,7 @@
     <a href="users.html"><i class="fa fa-users"></i> 用户管理</a>
     <a href="statistics.html"><i class="fa fa-bar-chart"></i> 数据统计</a>
     <a href="profile.html"><i class="fa fa-user"></i> 个人信息</a>
-    <a href="../index.html" style="margin-top:20px;"><i class="fa fa-sign-out"></i> 退出登录</a>
+    <a href="../index.html" onclick="localStorage.removeItem('current_user');"><i class="fa fa-sign-out"></i> 退出登录</a>
   </nav>
 </aside>
 
@@ -70,13 +69,12 @@
       <span class="text-lg font-semibold text-gray-800">文章管理</span>
     </div>
     <div class="flex items-center gap-3">
-      <span class="text-gray-600">admin</span>
-      <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">A</div>
+      <span class="text-gray-600" id="current-user-name">admin</span>
+      <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white" id="current-user-avatar">A</div>
     </div>
   </header>
   
   <main class="content">
-    <!-- 搜索/工具栏 -->
     <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
       <div class="toolbar">
         <div class="toolbar-left">
@@ -92,21 +90,20 @@
             <option value="1">已发布</option>
             <option value="0">草稿/下架</option>
           </select>
-          <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm" onclick="search()">搜索</button>
+          <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm" onclick="renderArticles()">搜索</button>
           <button class="px-4 py-2 border border-gray-300 rounded-lg text-sm" onclick="resetSearch()">重置</button>
         </div>
         <div class="toolbar-right">
-          <span class="stats">
-            共 <strong>6</strong> 篇
-            <span class="px-2 py-0.5 bg-green-100 text-green-600 rounded text-xs">6 已发布</span>
-            <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">0 草稿</span>
+          <span class="stats" id="article-stats">
+            共 <strong>0</strong> 篇
+            <span class="px-2 py-0.5 bg-green-100 text-green-600 rounded text-xs" id="published-count">0 已发布</span>
+            <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs" id="draft-count">0 草稿</span>
           </span>
           <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm" onclick="location.href='article-edit.html'">写文章</button>
         </div>
       </div>
     </div>
 
-    <!-- 文章表格 -->
     <div class="bg-white rounded-lg shadow-sm">
       <table class="w-full">
         <thead>
@@ -120,92 +117,11 @@
             <th class="px-6 py-3 w-48 text-center">操作</th>
           </tr>
         </thead>
-        <tbody>
-          <tr class="border-t border-gray-100">
-            <td class="px-6 py-3"><input type="checkbox" class="article-checkbox" value="1"></td>
-            <td class="px-6 py-3">
-              <div class="flex items-center gap-2">
-                <i class="fa fa-star text-red-500"></i>
-                <span class="text-blue-500 cursor-pointer hover:underline">Welcome to Blog System</span>
-              </div>
-            </td>
-            <td class="px-6 py-3 text-center">
-              <div>
-                <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">技术</span>
-                <div class="text-xs text-gray-500 mt-1">admin</div>
-              </div>
-            </td>
-            <td class="px-6 py-3 text-center text-sm text-gray-500">
-              <span><i class="fa fa-eye"></i> 130</span>
-              <span class="ml-3"><i class="fa fa-comment"></i> 5</span>
-            </td>
-            <td class="px-6 py-3 text-center">
-              <span class="px-2 py-1 bg-green-100 text-green-600 rounded text-xs">已发布</span>
-            </td>
-            <td class="px-6 py-3 text-center text-sm">2026-06-04</td>
-            <td class="px-6 py-3 text-center">
-              <button class="table-btn primary mr-2" onclick="editArticle(1)"><i class="fa fa-edit"></i></button>
-              <button class="table-btn" onclick="toggleTop(1)"><i class="fa fa-arrow-down"></i></button>
-              <button class="table-btn" onclick="deleteArticle(1)"><i class="fa fa-trash"></i></button>
-            </td>
-          </tr>
-          <tr class="border-t border-gray-100">
-            <td class="px-6 py-3"><input type="checkbox" class="article-checkbox" value="2"></td>
-            <td class="px-6 py-3">
-              <span class="text-blue-500 cursor-pointer hover:underline">Spring Boot 入门教程</span>
-            </td>
-            <td class="px-6 py-3 text-center">
-              <div>
-                <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">技术</span>
-                <div class="text-xs text-gray-500 mt-1">admin</div>
-              </div>
-            </td>
-            <td class="px-6 py-3 text-center text-sm text-gray-500">
-              <span><i class="fa fa-eye"></i> 98</span>
-              <span class="ml-3"><i class="fa fa-comment"></i> 3</span>
-            </td>
-            <td class="px-6 py-3 text-center">
-              <span class="px-2 py-1 bg-green-100 text-green-600 rounded text-xs">已发布</span>
-            </td>
-            <td class="px-6 py-3 text-center text-sm">2026-06-03</td>
-            <td class="px-6 py-3 text-center">
-              <button class="table-btn primary mr-2" onclick="editArticle(2)"><i class="fa fa-edit"></i></button>
-              <button class="table-btn" onclick="toggleTop(2)"><i class="fa fa-arrow-up"></i></button>
-              <button class="table-btn" onclick="deleteArticle(2)"><i class="fa fa-trash"></i></button>
-            </td>
-          </tr>
-          <tr class="border-t border-gray-100">
-            <td class="px-6 py-3"><input type="checkbox" class="article-checkbox" value="3"></td>
-            <td class="px-6 py-3">
-              <span class="text-blue-500 cursor-pointer hover:underline">Vue3 Composition API详解</span>
-            </td>
-            <td class="px-6 py-3 text-center">
-              <div>
-                <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">技术</span>
-                <div class="text-xs text-gray-500 mt-1">admin</div>
-              </div>
-            </td>
-            <td class="px-6 py-3 text-center text-sm text-gray-500">
-              <span><i class="fa fa-eye"></i> 75</span>
-              <span class="ml-3"><i class="fa fa-comment"></i> 2</span>
-            </td>
-            <td class="px-6 py-3 text-center">
-              <span class="px-2 py-1 bg-green-100 text-green-600 rounded text-xs">已发布</span>
-            </td>
-            <td class="px-6 py-3 text-center text-sm">2026-06-02</td>
-            <td class="px-6 py-3 text-center">
-              <button class="table-btn primary mr-2" onclick="editArticle(3)"><i class="fa fa-edit"></i></button>
-              <button class="table-btn" onclick="toggleTop(3)"><i class="fa fa-arrow-up"></i></button>
-              <button class="table-btn" onclick="deleteArticle(3)"><i class="fa fa-trash"></i></button>
-            </td>
-          </tr>
+        <tbody id="article-table-body">
         </tbody>
       </table>
       <div class="pagination-wrap">
-        <div class="pagination">
-          <button onclick="changePage(1)">首页</button>
-          <button class="active">1</button>
-          <button onclick="changePage(1)">下一页</button>
+        <div class="pagination" id="pagination">
         </div>
       </div>
     </div>
@@ -213,18 +129,94 @@
 </div>
 
 <script>
+const user = JSON.parse(localStorage.getItem('current_user') || 'null');
+document.getElementById('current-user-name').textContent = user.nickname || user.username;
+document.getElementById('current-user-avatar').textContent = (user.nickname || user.username).charAt(0).toUpperCase();
+
+function getArticles() {
+  return JSON.parse(localStorage.getItem('blog_articles') || '[]');
+}
+
+function saveArticles(articles) {
+  localStorage.setItem('blog_articles', JSON.stringify(articles));
+}
+
+function renderArticles() {
+  const articles = getArticles();
+  const keyword = document.getElementById('keyword').value.toLowerCase();
+  const category = document.getElementById('category').value;
+  const status = document.getElementById('status').value;
+
+  let filtered = articles.filter(a => {
+    const matchKeyword = !keyword || a.title.toLowerCase().includes(keyword) || (a.summary && a.summary.toLowerCase().includes(keyword));
+    const matchCategory = !category || a.categoryId == category;
+    const matchStatus = !status || a.status == status;
+    return matchKeyword && matchCategory && matchStatus;
+  });
+
+  filtered.sort((a, b) => {
+    if (a.isTop !== b.isTop) return b.isTop - a.isTop;
+    return new Date(b.createTime) - new Date(a.createTime);
+  });
+
+  const publishedCount = articles.filter(a => a.status == 1).length;
+  const draftCount = articles.filter(a => a.status == 0).length;
+  document.querySelector('#article-stats strong').textContent = filtered.length;
+  document.getElementById('published-count').textContent = `${publishedCount} 已发布`;
+  document.getElementById('draft-count').textContent = `${draftCount} 草稿`;
+
+  const tbody = document.getElementById('article-table-body');
+  tbody.innerHTML = '';
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">暂无文章数据</td></tr>';
+    return;
+  }
+
+  filtered.forEach((a, index) => {
+    const row = document.createElement('tr');
+    row.className = 'border-t border-gray-100';
+    row.innerHTML = `
+      <td class="px-6 py-3"><input type="checkbox" class="article-checkbox" value="${a.id}"></td>
+      <td class="px-6 py-3">
+        <div class="flex items-center gap-2">
+          ${a.isTop == 1 ? '<i class="fa fa-star text-red-500"></i>' : ''}
+          <span class="text-blue-500 cursor-pointer hover:underline">${a.title}</span>
+        </div>
+      </td>
+      <td class="px-6 py-3 text-center">
+        <div>
+          <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">${a.categoryName || '未分类'}</span>
+          <div class="text-xs text-gray-500 mt-1">${a.authorName || '未知'}</div>
+        </div>
+      </td>
+      <td class="px-6 py-3 text-center text-sm text-gray-500">
+        <span><i class="fa fa-eye"></i> ${a.viewCount || 0}</span>
+        <span class="ml-3"><i class="fa fa-comment"></i> ${a.commentCount || 0}</span>
+      </td>
+      <td class="px-6 py-3 text-center">
+        <span class="px-2 py-1 ${a.status == 1 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'} rounded text-xs">${a.status == 1 ? '已发布' : '草稿'}</span>
+      </td>
+      <td class="px-6 py-3 text-center text-sm">${a.createTime ? new Date(a.createTime).toLocaleDateString() : '-'}</td>
+      <td class="px-6 py-3 text-center">
+        <button class="table-btn primary mr-2" onclick="editArticle(${a.id})"><i class="fa fa-edit"></i></button>
+        <button class="table-btn" onclick="toggleTop(${a.id})">${a.isTop == 1 ? '<i class="fa fa-arrow-down"></i>' : '<i class="fa fa-arrow-up"></i>'}</button>
+        <button class="table-btn danger" onclick="deleteArticle(${a.id})"><i class="fa fa-trash"></i></button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
 document.getElementById('select-all').addEventListener('change', function(e) {
   document.querySelectorAll('.article-checkbox').forEach(cb => cb.checked = e.target.checked);
 });
-
-function search() {
-  alert('搜索功能演示');
-}
 
 function resetSearch() {
   document.getElementById('keyword').value = '';
   document.getElementById('category').value = '';
   document.getElementById('status').value = '';
+  renderArticles();
 }
 
 function editArticle(id) {
@@ -232,18 +224,26 @@ function editArticle(id) {
 }
 
 function toggleTop(id) {
-  alert('切换置顶成功');
-}
-
-function deleteArticle(id) {
-  if (confirm('确定删除这篇文章吗？')) {
-    alert('删除成功');
+  const articles = getArticles();
+  const index = articles.findIndex(a => a.id == id);
+  if (index !== -1) {
+    articles[index].isTop = articles[index].isTop == 1 ? 0 : 1;
+    saveArticles(articles);
+    renderArticles();
+    alert('置顶状态已切换');
   }
 }
 
-function changePage(page) {
-  alert(`跳转到第 ${page} 页`);
+function deleteArticle(id) {
+  if (!confirm('确定删除这篇文章吗？')) return;
+  const articles = getArticles();
+  const filtered = articles.filter(a => a.id != id);
+  saveArticles(filtered);
+  renderArticles();
+  alert('删除成功');
 }
+
+renderArticles();
 </script>
 </body>
 </html>

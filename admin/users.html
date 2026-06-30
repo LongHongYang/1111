@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -41,6 +41,14 @@
     .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
     .toolbar-left { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
     .toolbar-right { margin-left: auto; }
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); justify-content: center; align-items: center; z-index: 1000; }
+    .modal.show { display: flex; }
+    .modal-content { background: white; border-radius: 8px; padding: 24px; width: 400px; }
+    .modal-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
+    .form-item { margin-bottom: 16px; }
+    .form-label { display: block; margin-bottom: 6px; font-size: 14px; color: #303133; }
+    .form-input { width: 100%; padding: 8px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
   </style>
 </head>
 <body>
@@ -60,7 +68,7 @@
     <a href="users.html" class="active"><i class="fa fa-users"></i> 用户管理</a>
     <a href="statistics.html"><i class="fa fa-bar-chart"></i> 数据统计</a>
     <a href="profile.html"><i class="fa fa-user"></i> 个人信息</a>
-    <a href="../index.html" style="margin-top:20px;"><i class="fa fa-sign-out"></i> 退出登录</a>
+    <a href="../index.html" onclick="localStorage.removeItem('current_user');"><i class="fa fa-sign-out"></i> 退出登录</a>
   </nav>
 </aside>
 
@@ -71,13 +79,12 @@
       <span class="text-lg font-semibold text-gray-800">用户管理</span>
     </div>
     <div class="flex items-center gap-3">
-      <span class="text-gray-600">admin</span>
-      <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">A</div>
+      <span class="text-gray-600" id="current-user-name">admin</span>
+      <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white" id="current-user-avatar">A</div>
     </div>
   </header>
   
   <main class="content">
-    <!-- 搜索/工具栏 -->
     <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
       <div class="toolbar">
         <div class="toolbar-left">
@@ -87,16 +94,15 @@
             <option value="ADMIN">管理员</option>
             <option value="USER">普通用户</option>
           </select>
-          <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm" onclick="search()">搜索</button>
+          <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm" onclick="renderUsers()">搜索</button>
         </div>
         <div class="toolbar-right">
-          <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded text-sm mr-2">共 2 位用户</span>
-          <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm">新增用户</button>
+          <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded text-sm mr-2" id="user-count">共 0 位用户</span>
+          <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm" onclick="openAddModal()">新增用户</button>
         </div>
       </div>
     </div>
 
-    <!-- 用户表格 -->
     <div class="bg-white rounded-lg shadow-sm">
       <table class="w-full">
         <thead>
@@ -109,84 +115,200 @@
             <th class="px-6 py-3 w-40 text-center">操作</th>
           </tr>
         </thead>
-        <tbody>
-          <tr class="border-t border-gray-100">
-            <td class="px-6 py-3 text-center">1</td>
-            <td class="px-6 py-3">
-              <div class="user-cell">
-                <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white">A</div>
-                <div>
-                  <p class="user-name">admin</p>
-                  <p class="text-xs text-gray-400">超级管理员</p>
-                </div>
-              </div>
-            </td>
-            <td class="px-6 py-3 text-center">
-              <span class="px-2 py-1 rounded text-xs role-badge-admin">管理员</span>
-            </td>
-            <td class="px-6 py-3 text-center">
-              <span class="status-online"><i class="fa fa-circle"></i> 在线</span>
-            </td>
-            <td class="px-6 py-3 text-center text-sm">2026-06-01</td>
-            <td class="px-6 py-3 text-center">
-              <button class="table-btn mr-2" onclick="editUser(1)">编辑</button>
-              <button class="table-btn danger" onclick="deleteUser(1)">删除</button>
-            </td>
-          </tr>
-          <tr class="border-t border-gray-100">
-            <td class="px-6 py-3 text-center">2</td>
-            <td class="px-6 py-3">
-              <div class="user-cell">
-                <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600">U</div>
-                <div>
-                  <p class="user-name">user1</p>
-                  <p class="text-xs text-gray-400">普通用户</p>
-                </div>
-              </div>
-            </td>
-            <td class="px-6 py-3 text-center">
-              <span class="px-2 py-1 rounded text-xs role-badge-user">用户</span>
-            </td>
-            <td class="px-6 py-3 text-center">
-              <span class="status-offline"><i class="fa fa-circle"></i> 离线</span>
-            </td>
-            <td class="px-6 py-3 text-center text-sm">2026-06-05</td>
-            <td class="px-6 py-3 text-center">
-              <button class="table-btn mr-2" onclick="editUser(2)">编辑</button>
-              <button class="table-btn danger" onclick="deleteUser(2)">删除</button>
-            </td>
-          </tr>
+        <tbody id="user-table-body">
         </tbody>
       </table>
       <div class="pagination-wrap">
-        <div class="pagination">
-          <button onclick="changePage(1)">首页</button>
-          <button class="active">1</button>
-          <button onclick="changePage(1)">下一页</button>
+        <div class="pagination" id="pagination">
         </div>
       </div>
     </div>
   </main>
 </div>
 
+<!-- 新增/编辑用户弹窗 -->
+<div class="modal" id="user-modal">
+  <div class="modal-content">
+    <h3 class="modal-title" id="modal-title">新增用户</h3>
+    <form id="user-form">
+      <input type="hidden" id="user-id">
+      <div class="form-item">
+        <label class="form-label">用户名</label>
+        <input type="text" id="user-username" class="form-input" placeholder="请输入用户名">
+      </div>
+      <div class="form-item">
+        <label class="form-label">昵称</label>
+        <input type="text" id="user-nickname" class="form-input" placeholder="请输入昵称">
+      </div>
+      <div class="form-item">
+        <label class="form-label">密码</label>
+        <input type="password" id="user-password" class="form-input" placeholder="请输入密码">
+      </div>
+      <div class="form-item">
+        <label class="form-label">角色</label>
+        <select id="user-role" class="form-input">
+          <option value="USER">普通用户</option>
+          <option value="ADMIN">管理员</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded-lg">取消</button>
+        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
-function search() {
-  alert('搜索功能演示');
+const user = JSON.parse(localStorage.getItem('current_user') || 'null');
+document.getElementById('current-user-name').textContent = user.nickname || user.username;
+document.getElementById('current-user-avatar').textContent = (user.nickname || user.username).charAt(0).toUpperCase();
+
+function getUsers() {
+  return JSON.parse(localStorage.getItem('blog_users') || '[]');
+}
+
+function saveUsers(users) {
+  localStorage.setItem('blog_users', JSON.stringify(users));
+}
+
+function renderUsers() {
+  const users = getUsers();
+  const keyword = document.getElementById('keyword').value.toLowerCase();
+  const role = document.getElementById('role').value;
+
+  const filtered = users.filter(u => {
+    const matchKeyword = !keyword || u.username.toLowerCase().includes(keyword) || (u.nickname && u.nickname.toLowerCase().includes(keyword));
+    const matchRole = !role || u.role === role;
+    return matchKeyword && matchRole;
+  });
+
+  document.getElementById('user-count').textContent = `共 ${filtered.length} 位用户`;
+  const tbody = document.getElementById('user-table-body');
+  tbody.innerHTML = '';
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">暂无用户数据</td></tr>';
+    return;
+  }
+
+  filtered.forEach((u, index) => {
+    const isOnline = u.id === user.id;
+    const row = document.createElement('tr');
+    row.className = 'border-t border-gray-100';
+    row.innerHTML = `
+      <td class="px-6 py-3 text-center">${index + 1}</td>
+      <td class="px-6 py-3">
+        <div class="user-cell">
+          <div class="w-10 h-10 rounded-full ${u.role === 'ADMIN' ? 'bg-blue-500' : 'bg-gray-300'} flex items-center justify-center text-white">${(u.nickname || u.username).charAt(0).toUpperCase()}</div>
+          <div>
+            <p class="user-name">${u.username}</p>
+            <p class="text-xs text-gray-400">${u.nickname || '未设置昵称'}</p>
+          </div>
+        </div>
+      </td>
+      <td class="px-6 py-3 text-center">
+        <span class="px-2 py-1 rounded text-xs ${u.role === 'ADMIN' ? 'role-badge-admin' : 'role-badge-user'}">${u.role === 'ADMIN' ? '管理员' : '用户'}</span>
+      </td>
+      <td class="px-6 py-3 text-center">
+        <span class="${isOnline ? 'status-online' : 'status-offline'}"><i class="fa fa-circle"></i> ${isOnline ? '在线' : '离线'}</span>
+      </td>
+      <td class="px-6 py-3 text-center text-sm">${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-'}</td>
+      <td class="px-6 py-3 text-center">
+        ${u.role !== 'ADMIN' ? `<button class="table-btn mr-2" onclick="editUser(${u.id})">编辑</button>` : ''}
+        ${u.role !== 'ADMIN' ? `<button class="table-btn danger" onclick="deleteUser(${u.id})">删除</button>` : ''}
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function openAddModal() {
+  document.getElementById('modal-title').textContent = '新增用户';
+  document.getElementById('user-id').value = '';
+  document.getElementById('user-username').value = '';
+  document.getElementById('user-nickname').value = '';
+  document.getElementById('user-password').value = '';
+  document.getElementById('user-role').value = 'USER';
+  document.getElementById('user-modal').classList.add('show');
 }
 
 function editUser(id) {
-  alert(`编辑用户 ${id}`);
+  const users = getUsers();
+  const u = users.find(item => item.id === id);
+  if (!u) return;
+
+  document.getElementById('modal-title').textContent = '编辑用户';
+  document.getElementById('user-id').value = u.id;
+  document.getElementById('user-username').value = u.username;
+  document.getElementById('user-nickname').value = u.nickname || '';
+  document.getElementById('user-password').value = '';
+  document.getElementById('user-role').value = u.role || 'USER';
+  document.getElementById('user-modal').classList.add('show');
 }
+
+function closeModal() {
+  document.getElementById('user-modal').classList.remove('show');
+}
+
+document.getElementById('user-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const users = getUsers();
+  const id = document.getElementById('user-id').value;
+  const username = document.getElementById('user-username').value.trim();
+  const nickname = document.getElementById('user-nickname').value.trim();
+  const password = document.getElementById('user-password').value;
+  const role = document.getElementById('user-role').value;
+
+  if (!username) {
+    alert('请输入用户名');
+    return;
+  }
+
+  if (id) {
+    const index = users.findIndex(u => u.id == id);
+    if (index !== -1) {
+      users[index].username = username;
+      users[index].nickname = nickname;
+      if (password) users[index].password = password;
+      users[index].role = role;
+    }
+  } else {
+    if (!password) {
+      alert('请输入密码');
+      return;
+    }
+    const exists = users.find(u => u.username === username);
+    if (exists) {
+      alert('用户名已存在');
+      return;
+    }
+    users.push({
+      id: Date.now(),
+      username,
+      nickname,
+      password,
+      role,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  saveUsers(users);
+  closeModal();
+  renderUsers();
+  alert('保存成功');
+});
 
 function deleteUser(id) {
-  if (confirm('确定删除此用户吗？')) {
-    alert('删除成功');
-  }
+  if (!confirm('确定删除此用户吗？')) return;
+  const users = getUsers();
+  const filtered = users.filter(u => u.id != id);
+  saveUsers(filtered);
+  renderUsers();
+  alert('删除成功');
 }
 
-function changePage(page) {
-  alert(`跳转到第 ${page} 页`);
-}
+renderUsers();
 </script>
 </body>
 </html>

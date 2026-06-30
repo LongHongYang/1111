@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -20,6 +20,7 @@
     .sidebar nav { padding: 10px; }
     .sidebar nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: #bfcbd9; text-decoration: none; border-radius: 4px; margin-bottom: 4px; }
     .sidebar nav a:hover, .sidebar nav a.active { background: #1f2d3d; color: #409eff; }
+    .sidebar nav a.admin-only { display: none; }
     .main-area { margin-left: 220px; }
     .topbar { height: 56px; background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
     .content { padding: 20px; background: #f0f2f5; min-height: calc(100vh - 56px); }
@@ -56,14 +57,14 @@
   </div>
   <nav>
     <a href="dashboard.html"><i class="fa fa-dashboard"></i> 仪表盘</a>
-    <a href="articles.html"><i class="fa fa-file-text"></i> 文章管理</a>
+    <a href="articles.html" class="admin-only"><i class="fa fa-file-text"></i> 文章管理</a>
     <a href="article-edit.html" class="active"><i class="fa fa-pencil"></i> 写文章</a>
-    <a href="categories.html"><i class="fa fa-folder"></i> 分类管理</a>
+    <a href="categories.html" class="admin-only"><i class="fa fa-folder"></i> 分类管理</a>
     <a href="comments.html"><i class="fa fa-comments"></i> 评论管理</a>
-    <a href="users.html"><i class="fa fa-users"></i> 用户管理</a>
-    <a href="statistics.html"><i class="fa fa-bar-chart"></i> 数据统计</a>
+    <a href="users.html" class="admin-only"><i class="fa fa-users"></i> 用户管理</a>
+    <a href="statistics.html" class="admin-only"><i class="fa fa-bar-chart"></i> 数据统计</a>
     <a href="profile.html"><i class="fa fa-user"></i> 个人信息</a>
-    <a href="../index.html" style="margin-top:20px;"><i class="fa fa-sign-out"></i> 退出登录</a>
+    <a href="../index.html" onclick="localStorage.removeItem('current_user');"><i class="fa fa-sign-out"></i> 退出登录</a>
   </nav>
 </aside>
 
@@ -74,17 +75,18 @@
       <button onclick="location.href='articles.html'" class="text-gray-600 hover:text-gray-900">
         <i class="fa fa-arrow-left"></i> 返回列表
       </button>
-      <span class="text-lg font-semibold text-gray-800">写新文章</span>
+      <span class="text-lg font-semibold text-gray-800" id="page-title">写新文章</span>
     </div>
     <div class="flex items-center gap-3">
-      <span class="text-gray-600">admin</span>
-      <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">A</div>
+      <span class="text-gray-600" id="current-user-name">admin</span>
+      <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white" id="current-user-avatar">A</div>
     </div>
   </header>
   
   <main class="content">
     <div class="bg-white rounded-lg shadow-sm p-6">
       <form id="article-form">
+        <input type="hidden" id="article-id">
         <div class="form-item">
           <label class="form-label">标题</label>
           <input type="text" id="title" class="form-input" placeholder="请输入文章标题" maxlength="100">
@@ -169,6 +171,16 @@
 </div>
 
 <script>
+const user = JSON.parse(localStorage.getItem('current_user') || 'null');
+const isAdmin = user && user.role === 'ADMIN';
+
+document.getElementById('current-user-name').textContent = user.nickname || user.username;
+document.getElementById('current-user-avatar').textContent = (user.nickname || user.username).charAt(0).toUpperCase();
+
+if (!isAdmin) {
+  document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+}
+
 const showPreview = { value: false };
 
 function insertMarkdown(prefix, suffix) {
@@ -242,11 +254,30 @@ function togglePreview() {
   }
 }
 
+function getArticles() {
+  return JSON.parse(localStorage.getItem('blog_articles') || '[]');
+}
+
+function saveArticles(articles) {
+  localStorage.setItem('blog_articles', JSON.stringify(articles));
+}
+
+function getCategories() {
+  return JSON.parse(localStorage.getItem('blog_categories') || '[{"id":1,"name":"技术"},{"id":2,"name":"生活"},{"id":3,"name":"随笔"}]');
+}
+
 document.getElementById('article-form').addEventListener('submit', function(e) {
   e.preventDefault();
   
+  const id = document.getElementById('article-id').value;
   const title = document.getElementById('title').value;
   const content = document.getElementById('content').value;
+  const categoryId = document.getElementById('category').value;
+  const tags = document.getElementById('tags').value;
+  const summary = document.getElementById('summary').value;
+  const coverImage = document.getElementById('coverImage').value;
+  const isTop = document.getElementById('isTop').checked ? 1 : 0;
+  const status = document.querySelector('input[name="status"]:checked').value;
   
   if (!title) {
     alert('请输入文章标题');
@@ -257,12 +288,126 @@ document.getElementById('article-form').addEventListener('submit', function(e) {
     return;
   }
   
-  alert('文章发布成功！');
-  location.href = 'articles.html';
+  const articles = getArticles();
+  const categories = getCategories();
+  const category = categories.find(c => c.id == categoryId);
+  
+  if (id) {
+    const index = articles.findIndex(a => a.id == id);
+    if (index !== -1) {
+      articles[index] = {
+        ...articles[index],
+        title,
+        content,
+        categoryId,
+        categoryName: category ? category.name : '',
+        tags: tags ? tags.split(/[,，]/).map(t => t.trim()).filter(t => t) : [],
+        summary,
+        coverImage,
+        isTop,
+        status,
+        updateTime: new Date().toISOString()
+      };
+    }
+  } else {
+    articles.unshift({
+      id: Date.now(),
+      title,
+      content,
+      categoryId,
+      categoryName: category ? category.name : '',
+      tags: tags ? tags.split(/[,，]/).map(t => t.trim()).filter(t => t) : [],
+      summary,
+      coverImage,
+      isTop,
+      status,
+      viewCount: 0,
+      commentCount: 0,
+      authorId: user.id,
+      authorName: user.nickname || user.username,
+      createTime: new Date().toISOString(),
+      updateTime: new Date().toISOString()
+    });
+  }
+  
+  saveArticles(articles);
+  
+  const msg = id ? '文章更新成功！' : '文章发布成功！';
+  alert(msg);
+  
+  if (isAdmin) {
+    location.href = '/1111/admin/articles.html';
+  } else {
+    location.href = '/1111/admin/dashboard.html';
+  }
 });
 
 function saveDraft() {
+  const title = document.getElementById('title').value;
+  const content = document.getElementById('content').value;
+  
+  if (!title && !content) {
+    alert('请至少输入标题或内容');
+    return;
+  }
+  
+  const articles = getArticles();
+  const id = document.getElementById('article-id').value;
+  const categoryId = document.getElementById('category').value;
+  const tags = document.getElementById('tags').value;
+  const summary = document.getElementById('summary').value;
+  const coverImage = document.getElementById('coverImage').value;
+  
+  if (id) {
+    const index = articles.findIndex(a => a.id == id);
+    if (index !== -1) {
+      articles[index].title = title;
+      articles[index].content = content;
+      articles[index].status = 0;
+      articles[index].updateTime = new Date().toISOString();
+    }
+  } else {
+    articles.unshift({
+      id: Date.now(),
+      title: title || '未命名文章',
+      content,
+      categoryId,
+      categoryName: '',
+      tags: tags ? tags.split(/[,，]/).map(t => t.trim()).filter(t => t) : [],
+      summary,
+      coverImage,
+      isTop: 0,
+      status: 0,
+      viewCount: 0,
+      commentCount: 0,
+      authorId: user.id,
+      authorName: user.nickname || user.username,
+      createTime: new Date().toISOString(),
+      updateTime: new Date().toISOString()
+    });
+  }
+  
+  saveArticles(articles);
   alert('草稿保存成功！');
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+const articleId = urlParams.get('id');
+if (articleId) {
+  const articles = getArticles();
+  const article = articles.find(a => a.id == articleId);
+  if (article) {
+    document.getElementById('page-title').textContent = '编辑文章';
+    document.getElementById('article-id').value = article.id;
+    document.getElementById('title').value = article.title;
+    document.getElementById('content').value = article.content;
+    document.getElementById('category').value = article.categoryId || '';
+    document.getElementById('tags').value = article.tags ? article.tags.join(',') : '';
+    document.getElementById('summary').value = article.summary || '';
+    document.getElementById('coverImage').value = article.coverImage || '';
+    document.getElementById('isTop').checked = article.isTop == 1;
+    document.querySelector(`input[name="status"][value="${article.status}"]`).checked = true;
+  }
 }
 </script>
 </body>
