@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>首页 - 个人博客</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    .header-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .article-card { transition: all .25s; }
+    .article-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+    .tag-cloud .tag { cursor: pointer; transition: all .2s; }
+    .tag-cloud .tag:hover { transform: translateY(-2px); }
+    .carousel-item { min-height: 280px; }
+    .sidebar-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+    .hot-list li { cursor: pointer; transition: background .2s; }
+    .hot-list li:hover { background: #f5f7fa; }
+    .pagination button { padding: 6px 14px; border: 1px solid #e8eaed; border-radius: 4px; background: white; cursor: pointer; }
+    .pagination button.active { background: #409eff; color: white; border-color: #409eff; }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+<!-- 头部导航 -->
+<header class="header-gradient text-white sticky top-0 z-50 shadow-lg">
+  <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+    <div class="logo flex items-center gap-2 cursor-pointer" onclick="location.href='index.html'">
+      <i class="fa fa-pencil-square-o text-xl"></i>
+      <span class="text-xl font-bold">我的博客</span>
+    </div>
+    <nav class="flex items-center gap-6 flex-1 justify-center">
+      <a href="index.html" class="font-medium text-white">首页</a>
+      <div class="relative">
+        <span class="cursor-pointer text-gray-100 hover:text-white">分类 <i class="fa fa-caret-down text-xs"></i></span>
+        <div class="absolute hidden bg-white text-gray-800 rounded-lg shadow-xl py-2 min-w-[120px] top-full left-0" id="category-dropdown">
+          <div class="px-4 py-2 hover:bg-gray-50 cursor-pointer" onclick="filterByCategory(1)">技术</div>
+          <div class="px-4 py-2 hover:bg-gray-50 cursor-pointer" onclick="filterByCategory(2)">生活</div>
+          <div class="px-4 py-2 hover:bg-gray-50 cursor-pointer" onclick="filterByCategory(3)">随笔</div>
+        </div>
+      </div>
+      <div class="search-box relative w-64">
+        <input type="text" id="search-input" placeholder="搜索文章..." 
+               class="w-full bg-white/15 border border-white/30 rounded-full px-4 py-2 text-white placeholder-gray-200 focus:outline-none focus:bg-white/20">
+        <i class="fa fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-200"></i>
+      </div>
+    </nav>
+    <div class="flex items-center gap-3">
+      <button onclick="location.href='login.html'" class="bg-white text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100">登录</button>
+    </div>
+  </div>
+</header>
+
+<!-- 主体内容 -->
+<main class="max-w-6xl mx-auto px-4 py-6">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- 左侧文章列表 -->
+    <div class="lg:col-span-2">
+      <!-- 置顶文章轮播 -->
+      <div class="carousel rounded-lg overflow-hidden mb-6">
+        <div class="carousel-item bg-gradient-to-br from-purple-500 to-indigo-600 text-white p-8 flex flex-col justify-center" onclick="openArticle(1)">
+          <h3 class="text-2xl font-bold mb-3">Welcome to Blog System</h3>
+          <p class="opacity-90 mb-4">这是一个基于 Spring Boot + Vue3 构建的现代化个人博客系统，支持文章管理、分类标签、评论互动等功能。</p>
+          <div class="flex gap-4 text-sm opacity-80">
+            <span>技术</span>
+            <span>2026-06-04</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 文章列表 -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="flex justify-between items-center mb-5">
+          <h2 class="text-lg font-semibold text-gray-800" id="list-title">最新文章</h2>
+          <span class="text-sm text-gray-500" id="article-count">共 6 篇</span>
+        </div>
+        <div id="article-list" class="space-y-4">
+        </div>
+        <div class="pagination mt-6 justify-center">
+          <button onclick="changePage(1)">首页</button>
+          <button class="active" id="page-1">1</button>
+          <button onclick="changePage(1)">下一页</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧边栏 -->
+    <aside class="space-y-5">
+      <!-- 个人信息卡片 -->
+      <div class="sidebar-card text-center">
+        <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold mb-3">
+          博
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-1">个人博客</h3>
+        <p class="text-sm text-gray-500 mb-4">记录技术成长，分享学习心得</p>
+        <div class="flex justify-center gap-8">
+          <div>
+            <strong class="text-xl text-blue-500">6</strong>
+            <span class="text-xs text-gray-500 block">文章</span>
+          </div>
+          <div>
+            <strong class="text-xl text-blue-500">3</strong>
+            <span class="text-xs text-gray-500 block">分类</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 热门文章 -->
+      <div class="sidebar-card">
+        <h4 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <i class="fa fa-line-chart text-blue-500"></i> 热门文章
+        </h4>
+        <ul class="hot-list space-y-2">
+          <li class="flex items-center gap-3 py-2" onclick="openArticle(1)">
+            <span class="w-5 h-5 bg-red-500 text-white text-xs rounded flex items-center justify-center">1</span>
+            <span class="text-sm text-gray-700 truncate">Welcome to Blog System</span>
+          </li>
+          <li class="flex items-center gap-3 py-2" onclick="openArticle(2)">
+            <span class="w-5 h-5 bg-orange-500 text-white text-xs rounded flex items-center justify-center">2</span>
+            <span class="text-sm text-gray-700 truncate">Spring Boot 入门教程</span>
+          </li>
+          <li class="flex items-center gap-3 py-2" onclick="openArticle(3)">
+            <span class="w-5 h-5 bg-yellow-500 text-white text-xs rounded flex items-center justify-center">3</span>
+            <span class="text-sm text-gray-700 truncate">Vue3 Composition API详解</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 标签云 -->
+      <div class="sidebar-card">
+        <h4 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <i class="fa fa-tags text-blue-500"></i> 标签云
+        </h4>
+        <div class="tag-cloud flex flex-wrap gap-2">
+          <span class="tag px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm">Java</span>
+          <span class="tag px-3 py-1 bg-green-50 text-green-600 rounded-full text-sm">Spring</span>
+          <span class="tag px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-sm">Vue</span>
+          <span class="tag px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-sm">前端</span>
+          <span class="tag px-3 py-1 bg-pink-50 text-pink-600 rounded-full text-sm">生活</span>
+          <span class="tag px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">随笔</span>
+        </div>
+      </div>
+
+      <!-- 文章归档 -->
+      <div class="sidebar-card">
+        <h4 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <i class="fa fa-calendar text-blue-500"></i> 文章归档
+        </h4>
+        <div class="space-y-2">
+          <div class="cursor-pointer py-2 px-3 rounded hover:bg-gray-50 flex justify-between items-center">
+            <span class="font-medium">2026年</span>
+            <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">6篇</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-white border-t border-gray-200 text-center py-6 mt-8">
+  <p class="text-gray-500">&copy; 2026 个人博客系统 - 基于 SpringBoot + Vue3 构建</p>
+</footer>
+
+<script>
+const articles = [
+  { id: 1, title: 'Welcome to Blog System', summary: '基于 Spring Boot + Vue3 构建的现代化个人博客系统', categoryId: 1, categoryName: '技术', authorName: 'admin', viewCount: 130, commentCount: 5, createTime: '2026-06-04', tags: ['Java', 'Spring', 'Vue'] },
+  { id: 2, title: 'Spring Boot 入门教程', summary: '从零开始学习 Spring Boot，快速构建 RESTful API', categoryId: 1, categoryName: '技术', authorName: 'admin', viewCount: 98, commentCount: 3, createTime: '2026-06-03', tags: ['Java', 'Spring'] },
+  { id: 3, title: 'Vue3 Composition API详解', summary: '深入理解 Vue3 的 Composition API，掌握现代前端开发方式', categoryId: 1, categoryName: '技术', authorName: 'admin', viewCount: 75, commentCount: 2, createTime: '2026-06-02', tags: ['Vue', '前端'] },
+  { id: 4, title: '周末爬山记', summary: '周末和朋友一起去爬山，享受大自然的美好', categoryId: 2, categoryName: '生活', authorName: 'admin', viewCount: 45, commentCount: 4, createTime: '2026-06-01', tags: ['生活'] },
+  { id: 5, title: '阅读笔记：深入理解计算机系统', summary: '分享阅读《深入理解计算机系统》的心得体会', categoryId: 3, categoryName: '随笔', authorName: 'admin', viewCount: 32, commentCount: 1, createTime: '2026-05-31', tags: ['随笔', '阅读'] },
+  { id: 6, title: 'Java 8 新特性详解', summary: 'Lambda 表达式、Stream API、Optional 等新特性的使用', categoryId: 1, categoryName: '技术', authorName: 'admin', viewCount: 68, commentCount: 2, createTime: '2026-05-30', tags: ['Java'] }
+];
+
+function renderArticles(filteredArticles = articles) {
+  const list = document.getElementById('article-list');
+  list.innerHTML = filteredArticles.map(article => `
+    <div class="article-card border-b border-gray-100 pb-4 cursor-pointer" onclick="openArticle(${article.id})">
+      <div class="flex gap-4">
+        <div class="flex-1 min-w-0">
+          <h3 class="text-lg font-medium text-gray-800 mb-2 hover:text-blue-500 transition-colors">${article.title}</h3>
+          <p class="text-sm text-gray-500 mb-2 line-clamp-2">${article.summary}</p>
+          <div class="flex flex-wrap gap-2 mb-2">
+            ${article.tags.map(tag => `<span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">${tag}</span>`).join('')}
+          </div>
+          <div class="flex items-center gap-4 text-xs text-gray-400">
+            <span><i class="fa fa-user mr-1"></i>${article.authorName}</span>
+            <span><i class="fa fa-folder mr-1"></i>${article.categoryName}</span>
+            <span><i class="fa fa-eye mr-1"></i>${article.viewCount}</span>
+            <span><i class="fa fa-comment mr-1"></i>${article.commentCount}</span>
+            <span class="ml-auto">${article.createTime}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openArticle(id) {
+  location.href = `article.html?id=${id}`;
+}
+
+function changePage(pageNum) {
+  document.querySelectorAll('.pagination button').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('page-' + pageNum)?.classList.add('active');
+}
+
+function filterByCategory(id) {
+  const categoryNames = ['', '技术', '生活', '随笔'];
+  document.getElementById('list-title').textContent = categoryNames[id];
+  document.getElementById('category-dropdown').classList.add('hidden');
+  renderArticles(articles.filter(a => a.categoryId === id));
+}
+
+document.getElementById('search-input').addEventListener('keyup', function(e) {
+  if (e.key === 'Enter') {
+    const keyword = this.value.trim();
+    if (keyword) {
+      document.getElementById('list-title').textContent = '搜索结果';
+      renderArticles(articles.filter(a => a.title.includes(keyword) || a.summary.includes(keyword)));
+    } else {
+      document.getElementById('list-title').textContent = '最新文章';
+      renderArticles();
+    }
+  }
+});
+
+document.querySelector('.relative').addEventListener('click', function(e) {
+  e.stopPropagation();
+  const dropdown = document.getElementById('category-dropdown');
+  dropdown.classList.toggle('hidden');
+});
+
+document.addEventListener('click', function(e) {
+  const dropdown = document.getElementById('category-dropdown');
+  if (!dropdown.parentElement.contains(e.target)) {
+    dropdown.classList.add('hidden');
+  }
+});
+
+renderArticles();
+</script>
+</body>
+</html>

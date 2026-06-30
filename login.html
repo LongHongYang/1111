@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - 个人博客</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .login-card { width: 420px; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+    .input-group { position: relative; margin-bottom: 20px; }
+    .input-group i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #909399; }
+    .input-group input { width: 100%; padding: 12px 14px 12px 44px; border: 1px solid #dcdfe6; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+    .input-group input:focus { outline: none; border-color: #409eff; }
+    .login-btn { width: 100%; padding: 12px; background: #409eff; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+    .login-btn:hover { background: #66b1ff; }
+    .login-btn:active { background: #3a8ee6; }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <div class="login-card">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold mb-4">
+        <i class="fa fa-pencil-square-o"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-800 mb-2">个人博客系统</h2>
+      <p class="text-gray-500">欢迎登录</p>
+    </div>
+    
+    <form id="login-form" class="space-y-4">
+      <div class="input-group">
+        <i class="fa fa-user"></i>
+        <input type="text" id="username" placeholder="请输入用户名">
+      </div>
+      <div class="input-group">
+        <i class="fa fa-lock"></i>
+        <input type="password" id="password" placeholder="请输入密码">
+      </div>
+      <button type="submit" class="login-btn">登 录</button>
+      <div class="text-center text-gray-500 text-sm">
+        还没有账号？<a href="register.html" class="text-blue-500">立即注册</a>
+      </div>
+      <div class="text-center pt-4 border-t border-gray-200">
+        <p class="text-gray-400 text-sm">演示账号：admin / 123456</p>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('login-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  
+  if (username === 'admin' && password === '123456') {
+    alert('登录成功！');
+    location.href = 'admin/dashboard.html';
+  } else {
+    alert('用户名或密码错误！');
+  }
+});
+</script>
+</body>
+</html>

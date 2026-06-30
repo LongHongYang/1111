@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>注册 - 个人博客</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    .register-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .register-card { width: 420px; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+    .input-group { position: relative; margin-bottom: 20px; }
+    .input-group i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #909399; }
+    .input-group input { width: 100%; padding: 12px 14px 12px 44px; border: 1px solid #dcdfe6; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+    .input-group input:focus { outline: none; border-color: #409eff; }
+    .register-btn { width: 100%; padding: 12px; background: #409eff; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+    .register-btn:hover { background: #66b1ff; }
+    .error-msg { color: #f56c6c; font-size: 12px; margin-top: -16px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+<div class="register-container">
+  <div class="register-card">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold mb-4">
+        <i class="fa fa-user-plus"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-800 mb-2">个人博客系统</h2>
+      <p class="text-gray-500">创建新账号</p>
+    </div>
+    
+    <form id="register-form" class="space-y-4">
+      <div class="input-group">
+        <i class="fa fa-user"></i>
+        <input type="text" id="username" placeholder="请输入用户名（3-20个字符）">
+      </div>
+      <div class="input-group">
+        <i class="fa fa-user-circle-o"></i>
+        <input type="text" id="nickname" placeholder="请输入昵称">
+      </div>
+      <div class="input-group">
+        <i class="fa fa-lock"></i>
+        <input type="password" id="password" placeholder="请输入密码（至少6位）">
+      </div>
+      <div class="input-group">
+        <i class="fa fa-lock"></i>
+        <input type="password" id="confirmPassword" placeholder="请确认密码">
+      </div>
+      <button type="submit" class="register-btn">注 册</button>
+      <div class="text-center text-gray-500 text-sm">
+        已有账号？<a href="login.html" class="text-blue-500">立即登录</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('register-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const username = document.getElementById('username').value;
+  const nickname = document.getElementById('nickname').value;
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  
+  if (!username || username.length < 3 || username.length > 20) {
+    alert('用户名长度为3-20个字符');
+    return;
+  }
+  if (!nickname) {
+    alert('请输入昵称');
+    return;
+  }
+  if (!password || password.length < 6) {
+    alert('密码至少6个字符');
+    return;
+  }
+  if (password !== confirmPassword) {
+    alert('两次输入的密码不一致');
+    return;
+  }
+  
+  alert('注册成功！请登录');
+  location.href = 'login.html';
+});
+</script>
+</body>
+</html>

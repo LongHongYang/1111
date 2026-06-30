@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文章详情 - 个人博客</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    .header-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .markdown-content h1 { font-size: 28px; margin: 24px 0 16px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+    .markdown-content h2 { font-size: 22px; margin: 20px 0 12px; }
+    .markdown-content h3 { font-size: 18px; margin: 16px 0 10px; }
+    .markdown-content p { margin: 10px 0; line-height: 1.8; }
+    .markdown-content code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 14px; }
+    .markdown-content pre { background: #2d2d2d; color: #ccc; padding: 16px; border-radius: 8px; overflow-x: auto; margin: 16px 0; }
+    .markdown-content pre code { background: none; padding: 0; color: inherit; }
+    .markdown-content blockquote { border-left: 4px solid #409eff; padding-left: 16px; margin: 16px 0; color: #666; background: #f5f7fa; padding: 12px 16px; border-radius: 0 4px 4px 0; }
+    .markdown-content ul, .markdown-content ol { padding-left: 24px; margin: 10px 0; }
+    .markdown-content li { margin: 6px 0; }
+    .comment-item { border-bottom: 1px solid #f0f0f0; padding-bottom: 16px; margin-bottom: 16px; }
+    .comment-item:last-child { border-bottom: none; }
+    .sidebar-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+    .related-item { display: block; padding: 10px 12px; border-radius: 6px; transition: all .2s; }
+    .related-item:hover { background: #f5f7fa; }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+<!-- 头部导航 -->
+<header class="header-gradient text-white sticky top-0 z-50 shadow-lg">
+  <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <button onclick="location.href='index.html'" class="text-gray-100 hover:text-white">
+        <i class="fa fa-arrow-left"></i> 返回首页
+      </button>
+    </div>
+    <div class="logo flex items-center gap-2" onclick="location.href='index.html'">
+      <i class="fa fa-pencil-square-o"></i>
+      <span class="font-bold">我的博客</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button class="text-gray-100 hover:text-white">
+        <i class="fa fa-heart-o"></i>
+      </button>
+      <button class="text-gray-100 hover:text-white">
+        <i class="fa fa-bookmark-o"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- 主体内容 -->
+<main class="max-w-4xl mx-auto px-4 py-8">
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- 左侧文章主体 -->
+    <div class="lg:col-span-3">
+      <article class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="p-8">
+          <h1 class="text-3xl font-bold text-gray-800 mb-4" id="article-title"></h1>
+          <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-6">
+            <span><i class="fa fa-folder mr-1"></i> <span id="article-category"></span></span>
+            <span><i class="fa fa-user mr-1"></i> <span id="article-author"></span></span>
+            <span><i class="fa fa-calendar mr-1"></i> <span id="article-date"></span></span>
+            <span><i class="fa fa-eye mr-1"></i> <span id="article-views"></span></span>
+            <span><i class="fa fa-comment mr-1"></i> <span id="article-comments"></span></span>
+          </div>
+          <div class="flex flex-wrap gap-2 mb-6" id="article-tags"></div>
+          <div class="markdown-content text-gray-700" id="article-content"></div>
+        </div>
+
+        <!-- 操作栏 -->
+        <div class="px-8 py-4 border-t border-gray-100 flex justify-between items-center">
+          <div class="flex gap-4">
+            <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 flex items-center gap-2">
+              <i class="fa fa-thumbs-up"></i> 点赞 <span id="like-count">10</span>
+            </button>
+            <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 flex items-center gap-2">
+              <i class="fa fa-bookmark-o"></i> 收藏
+            </button>
+          </div>
+          <div class="flex gap-3">
+            <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 flex items-center gap-2">
+              <i class="fa fa-download"></i> 导出
+            </button>
+            <button onclick="location.href='index.html'" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 flex items-center gap-2">
+              <i class="fa fa-arrow-left"></i> 返回
+            </button>
+          </div>
+        </div>
+
+        <!-- 评论区 -->
+        <div class="px-8 py-6 bg-gray-50">
+          <h3 class="font-semibold text-gray-800 mb-4">评论 <span id="comment-count">(2)</span></h3>
+          
+          <!-- 发表评论 -->
+          <div class="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+            <div class="flex gap-3">
+              <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">U</div>
+              <div class="flex-1">
+                <textarea class="w-full h-20 border border-gray-200 rounded-lg p-3 resize-none focus:outline-none focus:border-blue-500" placeholder="写下你的评论..."></textarea>
+                <div class="flex justify-end mt-3">
+                  <button class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">发表评论</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 评论列表 -->
+          <div class="space-y-4" id="comment-list"></div>
+        </div>
+      </article>
+    </div>
+
+    <!-- 右侧边栏 -->
+    <aside class="lg:col-span-1">
+      <div class="sidebar-card">
+        <h4 class="font-semibold text-gray-800 mb-4">相关推荐</h4>
+        <div class="space-y-3">
+          <div class="related-item cursor-pointer" onclick="location.href='article.html?id=2'">
+            <div class="text-sm text-gray-700 truncate">Spring Boot 入门教程</div>
+            <div class="flex justify-between mt-1 text-xs text-gray-400">
+              <span>98 阅读</span>
+              <span>2026-06-03</span>
+            </div>
+          </div>
+          <div class="related-item cursor-pointer" onclick="location.href='article.html?id=3'">
+            <div class="text-sm text-gray-700 truncate">Vue3 Composition API详解</div>
+            <div class="flex justify-between mt-1 text-xs text-gray-400">
+              <span>75 阅读</span>
+              <span>2026-06-02</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+const articles = {
+  1: {
+    title: 'Welcome to Blog System',
+    content: '# Welcome\n\nThis is a **Spring Boot + Vue3** blog system.\n\n## Features\n\n- Article management\n- Category and tags\n- Comment system\n- User authentication\n\n## Getting Started\n\n```java\n@SpringBootApplication\npublic class BlogApplication {\n    public static void main(String[] args) {\n        SpringApplication.run(BlogApplication.class, args);\n    }\n}\n```\n\n> This is a quote.\n\n### Technologies\n\n- Java 17\n- Spring Boot 2.7\n- Vue 3\n- MySQL 8.0',
+    categoryName: '技术',
+    authorName: 'admin',
+    viewCount: 130,
+    commentCount: 5,
+    createTime: '2026-06-04',
+    tags: ['Java', 'Spring', 'Vue']
+  },
+  2: {
+    title: 'Spring Boot 入门教程',
+    content: '# Spring Boot 入门\n\nSpring Boot makes it easy to create stand-alone, production-grade Spring based Applications.\n\n## 环境要求\n\n- JDK 8+\n- Maven 3.6+\n\n## 创建项目\n\n使用 Spring Initializr 创建新项目，选择以下依赖：\n\n- Spring Web\n- Spring Data JPA\n- MySQL Driver\n\n## 配置文件\n\n```yaml\nserver:\n  port: 8080\n\nspring:\n  datasource:\n    url: jdbc:mysql://localhost:3306/blog\n    username: root\n    password: 123456\n```',
+    categoryName: '技术',
+    authorName: 'admin',
+    viewCount: 98,
+    commentCount: 3,
+    createTime: '2026-06-03',
+    tags: ['Java', 'Spring']
+  },
+  3: {
+    title: 'Vue3 Composition API详解',
+    content: '# Vue3 Composition API\n\nThe Composition API is a set of additive, function-based APIs that allow flexible composition of component logic.\n\n## 基本用法\n\n```javascript\nimport { ref, computed } from \'vue\'\n\nconst count = ref(0)\nconst double = computed(() => count.value * 2)\n\nfunction increment() {\n  count.value++\n}\n```\n\n## 响应式原理\n\nVue3 使用 Proxy 实现响应式系统，相比 Vue2 的 Object.defineProperty 有更好的性能和更完整的响应式能力。',
+    categoryName: '技术',
+    authorName: 'admin',
+    viewCount: 75,
+    commentCount: 2,
+    createTime: '2026-06-02',
+    tags: ['Vue', '前端']
+  },
+  4: {
+    title: '周末爬山记',
+    content: '# 周末爬山记\n\n周末天气不错，和朋友们一起去爬了附近的山。\n\n## 准备工作\n\n- 运动鞋\n- 水和食物\n- 防晒霜\n\n## 爬山过程\n\n山路不算太陡，但也需要一定的体力。沿途风景很美，空气清新。\n\n## 山顶风景\n\n到达山顶后，视野开阔，可以看到整个城市的景色。大家一起拍照留念，分享美食。',
+    categoryName: '生活',
+    authorName: 'admin',
+    viewCount: 45,
+    commentCount: 4,
+    createTime: '2026-06-01',
+    tags: ['生活']
+  },
+  5: {
+    title: '阅读笔记：深入理解计算机系统',
+    content: '# 深入理解计算机系统\n\n这本书是计算机专业的经典教材，涵盖了计算机系统的各个方面。\n\n## 核心概念\n\n1. **计算机系统概述**\n2. **信息的表示和处理**\n3. **程序的机器级表示**\n4. **处理器架构**\n5. **存储器层次结构**\n\n## 学习收获\n\n通过阅读这本书，我对计算机系统有了更深入的理解，也提高了编写高效代码的能力。',
+    categoryName: '随笔',
+    authorName: 'admin',
+    viewCount: 32,
+    commentCount: 1,
+    createTime: '2026-05-31',
+    tags: ['随笔', '阅读']
+  },
+  6: {
+    title: 'Java 8 新特性详解',
+    content: '# Java 8 新特性\n\nJava 8 引入了许多重要的新特性，改变了 Java 编程的方式。\n\n## Lambda 表达式\n\n```java\nList<String> list = Arrays.asList(\"a\", \"b\", \"c\");\nlist.forEach(s -> System.out.println(s));\n```\n\n## Stream API\n\n```java\nList<String> filtered = list.stream()\n    .filter(s -> s.startsWith(\"a\"))\n    .collect(Collectors.toList());\n```',
+    categoryName: '技术',
+    authorName: 'admin',
+    viewCount: 68,
+    commentCount: 2,
+    createTime: '2026-05-30',
+    tags: ['Java']
+  }
+};
+
+const comments = [
+  { id: 1, content: '非常棒的文章！学到了很多。', author: 'user1', time: '2026-06-05' },
+  { id: 2, content: '期待更多教程！', author: 'user2', time: '2026-06-06' }
+];
+
+function parseMarkdown(text) {
+  return text
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+    .replace(/\*(.*)\*/gim, '<em>$1</em>')
+    .replace(/`([^`]+)`/gim, '<code>$1</code>')
+    .replace(/```(\w*)\n([\s\S]*?)```/gim, '<pre><code>$2</code></pre>')
+    .replace(/> (.*$)/gim, '<blockquote>$1</blockquote>')
+    .replace(/\n/gim, '<br>');
+}
+
+function renderComments() {
+  const list = document.getElementById('comment-list');
+  list.innerHTML = comments.map(comment => `
+    <div class="comment-item">
+      <div class="flex gap-3">
+        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">${comment.author.charAt(0).toUpperCase()}</div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="font-medium text-gray-800">${comment.author}</span>
+            <span class="text-xs text-gray-400">${comment.time}</span>
+          </div>
+          <p class="text-gray-600">${comment.content}</p>
+          <button class="text-sm text-blue-500 mt-2 hover:underline">回复</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function init() {
+  const params = new URLSearchParams(window.location.search);
+  const id = parseInt(params.get('id')) || 1;
+  const article = articles[id] || articles[1];
+
+  document.getElementById('article-title').textContent = article.title;
+  document.getElementById('article-category').textContent = article.categoryName;
+  document.getElementById('article-author').textContent = article.authorName;
+  document.getElementById('article-date').textContent = article.createTime;
+  document.getElementById('article-views').textContent = article.viewCount;
+  document.getElementById('article-comments').textContent = article.commentCount;
+  document.getElementById('comment-count').textContent = `(${article.commentCount})`;
+  
+  document.getElementById('article-tags').innerHTML = article.tags.map(tag => 
+    `<span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm">${tag}</span>`
+  ).join('');
+
+  document.getElementById('article-content').innerHTML = parseMarkdown(article.content);
+  
+  renderComments();
+}
+
+init();
+</script>
+</body>
+</html>

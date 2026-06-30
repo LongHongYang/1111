@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>分类管理 - 博客管理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    .sidebar { width: 220px; background-color: #304156; min-height: 100vh; position: fixed; left: 0; top: 0; }
+    .sidebar .logo { height: 60px; display: flex; align-items: center; justify-content: center; gap: 10px; color: white; font-size: 18px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .sidebar nav { padding: 10px; }
+    .sidebar nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: #bfcbd9; text-decoration: none; border-radius: 4px; margin-bottom: 4px; }
+    .sidebar nav a:hover, .sidebar nav a.active { background: #1f2d3d; color: #409eff; }
+    .main-area { margin-left: 220px; }
+    .topbar { height: 56px; background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+    .content { padding: 20px; background: #f0f2f5; min-height: calc(100vh - 56px); }
+    .table-btn { padding: 4px 10px; border-radius: 4px; border: 1px solid #dcdfe6; background: white; cursor: pointer; font-size: 13px; }
+    .table-btn:hover { border-color: #409eff; color: #409eff; }
+    .table-btn.danger { color: #f56c6c; border-color: #f56c6c; }
+    .table-btn.danger:hover { background: #fef0f0; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.5); justify-content: center; align-items: center; z-index: 1000; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; border-radius: 8px; width: 480px; padding: 24px; }
+    .form-item { margin-bottom: 16px; }
+    .form-label { display: block; font-weight: 500; margin-bottom: 8px; color: #303133; }
+    .form-input { width: 100%; padding: 10px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+    .form-input:focus { outline: none; border-color: #409eff; }
+    .form-textarea { width: 100%; padding: 10px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px; resize: vertical; box-sizing: border-box; }
+    .form-textarea:focus { outline: none; border-color: #409eff; }
+    .form-input-number { width: 100px; padding: 10px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<!-- 侧边栏 -->
+<aside class="sidebar">
+  <div class="logo">
+    <i class="fa fa-pencil-square-o"></i>
+    <span>博客管理</span>
+  </div>
+  <nav>
+    <a href="dashboard.html"><i class="fa fa-dashboard"></i> 仪表盘</a>
+    <a href="articles.html"><i class="fa fa-file-text"></i> 文章管理</a>
+    <a href="article-edit.html"><i class="fa fa-pencil"></i> 写文章</a>
+    <a href="categories.html" class="active"><i class="fa fa-folder"></i> 分类管理</a>
+    <a href="comments.html"><i class="fa fa-comments"></i> 评论管理</a>
+    <a href="users.html"><i class="fa fa-users"></i> 用户管理</a>
+    <a href="statistics.html"><i class="fa fa-bar-chart"></i> 数据统计</a>
+    <a href="profile.html"><i class="fa fa-user"></i> 个人信息</a>
+    <a href="../index.html" style="margin-top:20px;"><i class="fa fa-sign-out"></i> 退出登录</a>
+  </nav>
+</aside>
+
+<!-- 主内容区 -->
+<div class="main-area">
+  <header class="topbar">
+    <div>
+      <span class="text-lg font-semibold text-gray-800">分类管理</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-gray-600">admin</span>
+      <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">A</div>
+    </div>
+  </header>
+  
+  <main class="content">
+    <!-- 操作栏 -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-4 flex justify-between items-center">
+      <span style="font-size:16px;font-weight:600;">分类列表</span>
+      <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm" onclick="openModal()">新增分类</button>
+    </div>
+
+    <!-- 分类表格 -->
+    <div class="bg-white rounded-lg shadow-sm">
+      <table class="w-full">
+        <thead>
+          <tr class="text-left text-sm text-gray-500 bg-gray-50">
+            <th class="px-6 py-3 w-12 text-center">ID</th>
+            <th class="px-6 py-3">分类名称</th>
+            <th class="px-6 py-3">描述</th>
+            <th class="px-6 py-3 w-16 text-center">排序</th>
+            <th class="px-6 py-3 w-44 text-center">创建时间</th>
+            <th class="px-6 py-3 w-48 text-center">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-t border-gray-100">
+            <td class="px-6 py-3 text-center">1</td>
+            <td class="px-6 py-3">技术</td>
+            <td class="px-6 py-3 text-gray-500">技术相关文章分类</td>
+            <td class="px-6 py-3 text-center">0</td>
+            <td class="px-6 py-3 text-center text-sm">2026-06-01</td>
+            <td class="px-6 py-3 text-center">
+              <button class="table-btn mr-2" onclick="editCategory(1)">编辑</button>
+              <button class="table-btn danger" onclick="deleteCategory(1)">删除</button>
+            </td>
+          </tr>
+          <tr class="border-t border-gray-100">
+            <td class="px-6 py-3 text-center">2</td>
+            <td class="px-6 py-3">生活</td>
+            <td class="px-6 py-3 text-gray-500">生活感悟文章分类</td>
+            <td class="px-6 py-3 text-center">1</td>
+            <td class="px-6 py-3 text-center text-sm">2026-06-02</td>
+            <td class="px-6 py-3 text-center">
+              <button class="table-btn mr-2" onclick="editCategory(2)">编辑</button>
+              <button class="table-btn danger" onclick="deleteCategory(2)">删除</button>
+            </td>
+          </tr>
+          <tr class="border-t border-gray-100">
+            <td class="px-6 py-3 text-center">3</td>
+            <td class="px-6 py-3">随笔</td>
+            <td class="px-6 py-3 text-gray-500">随笔记录文章分类</td>
+            <td class="px-6 py-3 text-center">2</td>
+            <td class="px-6 py-3 text-center text-sm">2026-06-03</td>
+            <td class="px-6 py-3 text-center">
+              <button class="table-btn mr-2" onclick="editCategory(3)">编辑</button>
+              <button class="table-btn danger" onclick="deleteCategory(3)">删除</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- 新增/编辑对话框 -->
+<div class="modal" id="category-modal">
+  <div class="modal-content">
+    <h3 class="text-lg font-semibold mb-4" id="modal-title">新增分类</h3>
+    <form id="category-form">
+      <input type="hidden" id="category-id">
+      <div class="form-item">
+        <label class="form-label">名称</label>
+        <input type="text" id="category-name" class="form-input" placeholder="请输入分类名称" maxlength="50">
+      </div>
+      <div class="form-item">
+        <label class="form-label">描述</label>
+        <textarea id="category-description" class="form-textarea" rows="3" placeholder="请输入分类描述（选填）" maxlength="200"></textarea>
+      </div>
+      <div class="form-item">
+        <label class="form-label">排序</label>
+        <input type="number" id="category-sort" class="form-input-number" min="0" max="999" value="0">
+        <span style="margin-left:8px;color:#909399;font-size:13px">数字越小越靠前</span>
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <button type="button" class="px-4 py-2 border border-gray-300 rounded-lg" onclick="closeModal()">取消</button>
+        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg">确定</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const categories = [
+  { id: 1, name: '技术', description: '技术相关文章分类', sortOrder: 0, createTime: '2026-06-01' },
+  { id: 2, name: '生活', description: '生活感悟文章分类', sortOrder: 1, createTime: '2026-06-02' },
+  { id: 3, name: '随笔', description: '随笔记录文章分类', sortOrder: 2, createTime: '2026-06-03' }
+];
+
+function openModal() {
+  document.getElementById('modal-title').textContent = '新增分类';
+  document.getElementById('category-id').value = '';
+  document.getElementById('category-name').value = '';
+  document.getElementById('category-description').value = '';
+  document.getElementById('category-sort').value = '0';
+  document.getElementById('category-modal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('category-modal').classList.remove('active');
+}
+
+function editCategory(id) {
+  const category = categories.find(c => c.id === id);
+  if (category) {
+    document.getElementById('modal-title').textContent = '编辑分类';
+    document.getElementById('category-id').value = category.id;
+    document.getElementById('category-name').value = category.name;
+    document.getElementById('category-description').value = category.description;
+    document.getElementById('category-sort').value = category.sortOrder;
+    document.getElementById('category-modal').classList.add('active');
+  }
+}
+
+function deleteCategory(id) {
+  if (confirm('确定删除此分类吗？删除后关联文章将失去分类。')) {
+    alert('删除成功');
+  }
+}
+
+document.getElementById('category-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const name = document.getElementById('category-name').value;
+  if (!name) {
+    alert('请输入分类名称');
+    return;
+  }
+  
+  const id = document.getElementById('category-id').value;
+  if (id) {
+    alert('更新成功');
+  } else {
+    alert('添加成功');
+  }
+  closeModal();
+});
+</script>
+</body>
+</html>
