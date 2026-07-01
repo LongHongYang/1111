@@ -229,8 +229,21 @@ function closeModal() {
   document.getElementById('user-modal').classList.remove('show');
 }
 
-function deleteUser(id) {
-  alert('删除用户功能需后端支持');
+async function deleteUser(id) {
+  if (!confirm('确定要删除该用户吗？')) return;
+  
+  try {
+    const result = await BlogAPI.deleteUser(id);
+    if (result.code === 200) {
+      alert('删除成功');
+      renderUsers();
+    } else {
+      alert(result.msg || '删除失败');
+    }
+  } catch (error) {
+    alert('删除失败，请检查后端服务是否正常');
+    console.error(error);
+  }
 }
 
 renderUsers();

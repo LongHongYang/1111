@@ -104,6 +104,12 @@ const BlogAPI = {
     return this.request(`/user/list?${query}`);
   },
   
+  async deleteUser(id) {
+    return this.request(`/user/${id}`, {
+      method: 'DELETE'
+    });
+  },
+  
   async updateUserStatus(id, status) {
     return this.request(`/user/status/${id}`, {
       method: 'PUT',
