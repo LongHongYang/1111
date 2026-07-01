@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -170,7 +170,7 @@
 
 <script>
 const user = JSON.parse(localStorage.getItem('current_user') || 'null');
-const isAdmin = user && user.role === 'ADMIN';
+const isAdmin = user && user.role === 1;
 
 // 显示用户信息
 document.getElementById('user-display').textContent = user.nickname || user.username;

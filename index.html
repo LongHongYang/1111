@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -163,15 +163,31 @@
   <p class="text-gray-500">&copy; 2026 个人博客系统 - 基于 SpringBoot + Vue3 构建</p>
 </footer>
 
+<script src="api.js"></script>
 <script>
-const articles = [
-  { id: 1, title: 'Welcome to Blog System', summary: '基于 Spring Boot + Vue3 构建的现代化个人博客系统', categoryId: 1, categoryName: '技术', authorName: 'admin', viewCount: 130, commentCount: 5, createTime: '2026-06-04', tags: ['Java', 'Spring', 'Vue'] },
-  { id: 2, title: 'Spring Boot 入门教程', summary: '从零开始学习 Spring Boot，快速构建 RESTful API', categoryId: 1, categoryName: '技术', authorName: 'admin', viewCount: 98, commentCount: 3, createTime: '2026-06-03', tags: ['Java', 'Spring'] },
-  { id: 3, title: 'Vue3 Composition API详解', summary: '深入理解 Vue3 的 Composition API，掌握现代前端开发方式', categoryId: 1, categoryName: '技术', authorName: 'admin', viewCount: 75, commentCount: 2, createTime: '2026-06-02', tags: ['Vue', '前端'] },
-  { id: 4, title: '周末爬山记', summary: '周末和朋友一起去爬山，享受大自然的美好', categoryId: 2, categoryName: '生活', authorName: 'admin', viewCount: 45, commentCount: 4, createTime: '2026-06-01', tags: ['生活'] },
-  { id: 5, title: '阅读笔记：深入理解计算机系统', summary: '分享阅读《深入理解计算机系统》的心得体会', categoryId: 3, categoryName: '随笔', authorName: 'admin', viewCount: 32, commentCount: 1, createTime: '2026-05-31', tags: ['随笔', '阅读'] },
-  { id: 6, title: 'Java 8 新特性详解', summary: 'Lambda 表达式、Stream API、Optional 等新特性的使用', categoryId: 1, categoryName: '技术', authorName: 'admin', viewCount: 68, commentCount: 2, createTime: '2026-05-30', tags: ['Java'] }
-];
+let articles = [];
+
+async function fetchArticles() {
+  try {
+    const result = await BlogAPI.getArticles(1, 10);
+    if (result.code === 200) {
+      articles = result.data.list || [];
+      document.getElementById('article-count').textContent = `共 ${result.data.total || 0} 篇`;
+      renderArticles();
+    }
+  } catch (error) {
+    console.error('获取文章失败:', error);
+    articles = [
+      { id: 1, title: 'Welcome to Blog System', summary: '基于 Spring Boot + Vue3 构建的现代化个人博客系统', categoryId: 1, categoryName: '技术', authorName: 'admin', viewCount: 130, commentCount: 5, createTime: '2026-06-04', tags: ['Java', 'Spring', 'Vue'] },
+      { id: 2, title: 'Spring Boot 入门教程', summary: '从零开始学习 Spring Boot，快速构建 RESTful API', categoryId: 1, categoryName: '技术', authorName: 'admin', viewCount: 98, commentCount: 3, createTime: '2026-06-03', tags: ['Java', 'Spring'] },
+      { id: 3, title: 'Vue3 Composition API详解', summary: '深入理解 Vue3 的 Composition API，掌握现代前端开发方式', categoryId: 1, categoryName: '技术', authorName: 'admin', viewCount: 75, commentCount: 2, createTime: '2026-06-02', tags: ['Vue', '前端'] },
+      { id: 4, title: '周末爬山记', summary: '周末和朋友一起去爬山，享受大自然的美好', categoryId: 2, categoryName: '生活', authorName: 'admin', viewCount: 45, commentCount: 4, createTime: '2026-06-01', tags: ['生活'] },
+      { id: 5, title: '阅读笔记：深入理解计算机系统', summary: '分享阅读《深入理解计算机系统》的心得体会', categoryId: 3, categoryName: '随笔', authorName: 'admin', viewCount: 32, commentCount: 1, createTime: '2026-05-31', tags: ['随笔', '阅读'] },
+      { id: 6, title: 'Java 8 新特性详解', summary: 'Lambda 表达式、Stream API、Optional 等新特性的使用', categoryId: 1, categoryName: '技术', authorName: 'admin', viewCount: 68, commentCount: 2, createTime: '2026-05-30', tags: ['Java'] }
+    ];
+    renderArticles();
+  }
+}
 
 function renderArticles(filteredArticles = articles) {
   const list = document.getElementById('article-list');
@@ -182,14 +198,14 @@ function renderArticles(filteredArticles = articles) {
           <h3 class="text-lg font-medium text-gray-800 mb-2 hover:text-blue-500 transition-colors">${article.title}</h3>
           <p class="text-sm text-gray-500 mb-2 line-clamp-2">${article.summary}</p>
           <div class="flex flex-wrap gap-2 mb-2">
-            ${article.tags.map(tag => `<span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">${tag}</span>`).join('')}
+            ${(article.tags || []).map(tag => `<span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">${tag}</span>`).join('')}
           </div>
           <div class="flex items-center gap-4 text-xs text-gray-400">
-            <span><i class="fa fa-user mr-1"></i>${article.authorName}</span>
-            <span><i class="fa fa-folder mr-1"></i>${article.categoryName}</span>
-            <span><i class="fa fa-eye mr-1"></i>${article.viewCount}</span>
-            <span><i class="fa fa-comment mr-1"></i>${article.commentCount}</span>
-            <span class="ml-auto">${article.createTime}</span>
+            <span><i class="fa fa-user mr-1"></i>${article.authorName || '未知'}</span>
+            <span><i class="fa fa-folder mr-1"></i>${article.categoryName || '未分类'}</span>
+            <span><i class="fa fa-eye mr-1"></i>${article.viewCount || 0}</span>
+            <span><i class="fa fa-comment mr-1"></i>${article.commentCount || 0}</span>
+            <span class="ml-auto">${article.createTime ? new Date(article.createTime).toLocaleDateString('zh-CN') : ''}</span>
           </div>
         </div>
       </div>
@@ -239,7 +255,7 @@ document.addEventListener('click', function(e) {
   }
 });
 
-renderArticles();
+fetchArticles();
 </script>
 </body>
 </html>

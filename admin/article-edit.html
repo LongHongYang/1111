@@ -6,13 +6,7 @@
   <title>写文章 - 博客管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  <script>
-    const currentUser = JSON.parse(localStorage.getItem('current_user') || 'null');
-    if (!currentUser) {
-      alert('请先登录');
-      location.href = '/1111/login.html';
-    }
-  </script>
+  <script src="../api.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
     .sidebar { width: 220px; background-color: #304156; min-height: 100vh; position: fixed; left: 0; top: 0; }
@@ -49,7 +43,6 @@
 </head>
 <body>
 
-<!-- 侧边栏 -->
 <aside class="sidebar">
   <div class="logo">
     <i class="fa fa-pencil-square-o"></i>
@@ -64,11 +57,10 @@
     <a href="users.html" class="admin-only"><i class="fa fa-users"></i> 用户管理</a>
     <a href="statistics.html" class="admin-only"><i class="fa fa-bar-chart"></i> 数据统计</a>
     <a href="profile.html"><i class="fa fa-user"></i> 个人信息</a>
-    <a href="../index.html" onclick="localStorage.removeItem('current_user');"><i class="fa fa-sign-out"></i> 退出登录</a>
+    <a href="../index.html" onclick="BlogAPI.clearToken()"><i class="fa fa-sign-out"></i> 退出登录</a>
   </nav>
 </aside>
 
-<!-- 主内容区 -->
 <div class="main-area">
   <header class="topbar">
     <div class="flex items-center gap-4">
@@ -162,7 +154,7 @@
         </div>
 
         <div class="flex gap-3">
-          <button type="submit" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">发布文章</button>
+          <button type="submit" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" id="submit-btn">发布文章</button>
           <button type="button" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" onclick="saveDraft()">保存草稿</button>
         </div>
       </form>
@@ -172,7 +164,12 @@
 
 <script>
 const user = JSON.parse(localStorage.getItem('current_user') || 'null');
-const isAdmin = user && user.role === 'ADMIN';
+if (!user) {
+  alert('请先登录');
+  location.href = '/1111/login.html';
+}
+
+const isAdmin = user && user.role === 1;
 
 document.getElementById('current-user-name').textContent = user.nickname || user.username;
 document.getElementById('current-user-avatar').textContent = (user.nickname || user.username).charAt(0).toUpperCase();
@@ -192,9 +189,7 @@ function insertMarkdown(prefix, suffix) {
   const before = text.substring(0, start);
   const selected = text.substring(start, end);
   const after = text.substring(end);
-
   textarea.value = before + prefix + selected + suffix + after;
-  
   setTimeout(() => {
     textarea.focus();
     const newPos = start + prefix.length + (end - start) + suffix.length;
@@ -239,7 +234,6 @@ function togglePreview() {
   const textarea = document.getElementById('content');
   const preview = document.getElementById('preview-area');
   const btn = document.getElementById('preview-btn');
-
   if (showPreview.value) {
     textarea.classList.add('hidden');
     preview.classList.remove('hidden');
@@ -254,19 +248,7 @@ function togglePreview() {
   }
 }
 
-function getArticles() {
-  return JSON.parse(localStorage.getItem('blog_articles') || '[]');
-}
-
-function saveArticles(articles) {
-  localStorage.setItem('blog_articles', JSON.stringify(articles));
-}
-
-function getCategories() {
-  return JSON.parse(localStorage.getItem('blog_categories') || '[{"id":1,"name":"技术"},{"id":2,"name":"生活"},{"id":3,"name":"随笔"}]');
-}
-
-document.getElementById('article-form').addEventListener('submit', function(e) {
+document.getElementById('article-form').addEventListener('submit', async function(e) {
   e.preventDefault();
   
   const id = document.getElementById('article-id').value;
@@ -278,6 +260,7 @@ document.getElementById('article-form').addEventListener('submit', function(e) {
   const coverImage = document.getElementById('coverImage').value;
   const isTop = document.getElementById('isTop').checked ? 1 : 0;
   const status = document.querySelector('input[name="status"]:checked').value;
+  const btn = document.getElementById('submit-btn');
   
   if (!title) {
     alert('请输入文章标题');
@@ -288,126 +271,117 @@ document.getElementById('article-form').addEventListener('submit', function(e) {
     return;
   }
   
-  const articles = getArticles();
-  const categories = getCategories();
-  const category = categories.find(c => c.id == categoryId);
+  btn.disabled = true;
+  btn.textContent = '提交中...';
   
-  if (id) {
-    const index = articles.findIndex(a => a.id == id);
-    if (index !== -1) {
-      articles[index] = {
-        ...articles[index],
-        title,
-        content,
-        categoryId,
-        categoryName: category ? category.name : '',
-        tags: tags ? tags.split(/[,，]/).map(t => t.trim()).filter(t => t) : [],
-        summary,
-        coverImage,
-        isTop,
-        status,
-        updateTime: new Date().toISOString()
-      };
-    }
-  } else {
-    articles.unshift({
-      id: Date.now(),
+  try {
+    const articleData = {
+      id: id ? parseInt(id) : null,
       title,
       content,
-      categoryId,
-      categoryName: category ? category.name : '',
+      categoryId: categoryId ? parseInt(categoryId) : null,
       tags: tags ? tags.split(/[,，]/).map(t => t.trim()).filter(t => t) : [],
       summary,
       coverImage,
       isTop,
-      status,
-      viewCount: 0,
-      commentCount: 0,
-      authorId: user.id,
-      authorName: user.nickname || user.username,
-      createTime: new Date().toISOString(),
-      updateTime: new Date().toISOString()
-    });
-  }
-  
-  saveArticles(articles);
-  
-  const msg = id ? '文章更新成功！' : '文章发布成功！';
-  alert(msg);
-  
-  if (isAdmin) {
-    location.href = '/1111/admin/articles.html';
-  } else {
-    location.href = '/1111/admin/dashboard.html';
+      status: parseInt(status)
+    };
+    
+    const result = await BlogAPI.saveArticle(articleData);
+    
+    if (result.code === 200) {
+      const msg = id ? '文章更新成功！' : '文章发布成功！';
+      alert(msg);
+      
+      if (isAdmin) {
+        location.href = '/1111/admin/articles.html';
+      } else {
+        location.href = '/1111/admin/dashboard.html';
+      }
+    } else {
+      alert(result.msg || '操作失败');
+    }
+  } catch (error) {
+    alert('操作失败，请检查后端服务是否正常运行');
+    console.error(error);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '发布文章';
   }
 });
 
-function saveDraft() {
+async function saveDraft() {
   const title = document.getElementById('title').value;
   const content = document.getElementById('content').value;
+  const btn = document.getElementById('submit-btn');
   
   if (!title && !content) {
     alert('请至少输入标题或内容');
     return;
   }
   
-  const articles = getArticles();
-  const id = document.getElementById('article-id').value;
-  const categoryId = document.getElementById('category').value;
-  const tags = document.getElementById('tags').value;
-  const summary = document.getElementById('summary').value;
-  const coverImage = document.getElementById('coverImage').value;
+  btn.disabled = true;
+  btn.textContent = '保存中...';
   
-  if (id) {
-    const index = articles.findIndex(a => a.id == id);
-    if (index !== -1) {
-      articles[index].title = title;
-      articles[index].content = content;
-      articles[index].status = 0;
-      articles[index].updateTime = new Date().toISOString();
-    }
-  } else {
-    articles.unshift({
-      id: Date.now(),
+  try {
+    const id = document.getElementById('article-id').value;
+    const categoryId = document.getElementById('category').value;
+    const tags = document.getElementById('tags').value;
+    const summary = document.getElementById('summary').value;
+    const coverImage = document.getElementById('coverImage').value;
+    
+    const articleData = {
+      id: id ? parseInt(id) : null,
       title: title || '未命名文章',
       content,
-      categoryId,
-      categoryName: '',
+      categoryId: categoryId ? parseInt(categoryId) : null,
       tags: tags ? tags.split(/[,，]/).map(t => t.trim()).filter(t => t) : [],
       summary,
       coverImage,
       isTop: 0,
-      status: 0,
-      viewCount: 0,
-      commentCount: 0,
-      authorId: user.id,
-      authorName: user.nickname || user.username,
-      createTime: new Date().toISOString(),
-      updateTime: new Date().toISOString()
-    });
+      status: 0
+    };
+    
+    const result = await BlogAPI.saveArticle(articleData);
+    
+    if (result.code === 200) {
+      alert('草稿保存成功！');
+    } else {
+      alert(result.msg || '保存失败');
+    }
+  } catch (error) {
+    alert('保存失败，请检查后端服务是否正常运行');
+    console.error(error);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '发布文章';
   }
-  
-  saveArticles(articles);
-  alert('草稿保存成功！');
 }
 
 const urlParams = new URLSearchParams(window.location.search);
 const articleId = urlParams.get('id');
 if (articleId) {
-  const articles = getArticles();
-  const article = articles.find(a => a.id == articleId);
-  if (article) {
-    document.getElementById('page-title').textContent = '编辑文章';
-    document.getElementById('article-id').value = article.id;
-    document.getElementById('title').value = article.title;
-    document.getElementById('content').value = article.content;
-    document.getElementById('category').value = article.categoryId || '';
-    document.getElementById('tags').value = article.tags ? article.tags.join(',') : '';
-    document.getElementById('summary').value = article.summary || '';
-    document.getElementById('coverImage').value = article.coverImage || '';
-    document.getElementById('isTop').checked = article.isTop == 1;
-    document.querySelector(`input[name="status"][value="${article.status}"]`).checked = true;
-  }
+  (async function() {
+    try {
+      const result = await BlogAPI.getArticleDetail(articleId);
+      if (result.code === 200) {
+        const article = result.data;
+        document.getElementById('page-title').textContent = '编辑文章';
+        document.getElementById('article-id').value = article.id;
+        document.getElementById('title').value = article.title;
+        document.getElementById('content').value = article.content;
+        document.getElementById('category').value = article.categoryId || '';
+        document.getElementById('tags').value = article.tags ? article.tags.join(',') : '';
+        document.getElementById('summary').value = article.summary || '';
+        document.getElementById('coverImage').value = article.coverImage || '';
+        document.getElementById('isTop').checked = article.isTop == 1;
+        const statusRadio = document.querySelector(`input[name="status"][value="${article.status}"]`);
+        if (statusRadio) statusRadio.checked = true;
+      }
+    } catch (error) {
+      console.error('加载文章失败', error);
+    }
+  })();
 }
 </script>
 </body>

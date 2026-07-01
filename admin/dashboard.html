@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -6,6 +6,7 @@
   <title>仪表盘 - 博客管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="../api.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
     .sidebar { width: 220px; background-color: #304156; min-height: 100vh; position: fixed; left: 0; top: 0; }
@@ -13,26 +14,24 @@
     .sidebar nav { padding: 10px; }
     .sidebar nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: #bfcbd9; text-decoration: none; border-radius: 4px; margin-bottom: 4px; }
     .sidebar nav a:hover, .sidebar nav a.active { background: #1f2d3d; color: #409eff; }
-    .sidebar nav a.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
-    .admin-badge { background: #f56c6c; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px; }
-    .user-badge { background: #67c23a; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px; }
+    .sidebar nav a.admin-only { display: none; }
     .main-area { margin-left: 220px; }
     .topbar { height: 56px; background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
     .content { padding: 20px; background: #f0f2f5; min-height: calc(100vh - 56px); }
-    .stat-card { background: white; border-radius: 8px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
-    .stat-icon { width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white; }
-    .quick-btn { padding: 12px; border-radius: 8px; color: white; border: none; cursor: pointer; font-size: 14px; }
+    .stat-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+    .stat-value { font-size: 32px; font-weight: bold; color: #303133; }
+    .stat-label { font-size: 14px; color: #909399; margin-top: 8px; }
+    .stat-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
   </style>
 </head>
 <body>
 
-<!-- 侧边栏 -->
-<aside class="sidebar" id="sidebar">
+<aside class="sidebar">
   <div class="logo">
     <i class="fa fa-pencil-square-o"></i>
     <span>博客管理</span>
   </div>
-  <nav id="sidebar-nav">
+  <nav>
     <a href="dashboard.html" class="active"><i class="fa fa-dashboard"></i> 仪表盘</a>
     <a href="articles.html" class="admin-only"><i class="fa fa-file-text"></i> 文章管理</a>
     <a href="article-edit.html"><i class="fa fa-pencil"></i> 写文章</a>
@@ -41,131 +40,70 @@
     <a href="users.html" class="admin-only"><i class="fa fa-users"></i> 用户管理</a>
     <a href="statistics.html" class="admin-only"><i class="fa fa-bar-chart"></i> 数据统计</a>
     <a href="profile.html"><i class="fa fa-user"></i> 个人信息</a>
-    <a href="../index.html" onclick="localStorage.removeItem('current_user');" style="margin-top:20px;"><i class="fa fa-sign-out"></i> 退出登录</a>
+    <a href="../index.html" onclick="BlogAPI.clearToken()"><i class="fa fa-sign-out"></i> 退出登录</a>
   </nav>
 </aside>
 
-<!-- 主内容区 -->
 <div class="main-area">
   <header class="topbar">
-    <div class="flex items-center gap-3">
-      <span class="text-lg font-semibold text-gray-800">仪表盘</span>
-      <span id="role-badge"></span>
+    <div>
+      <h1 class="text-xl font-bold text-gray-800">仪表盘</h1>
+      <p class="text-sm text-gray-500" id="current-date">2024年1月1日 星期一</p>
     </div>
     <div class="flex items-center gap-3">
-      <span class="text-gray-600" id="user-display"></span>
-      <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white" id="user-avatar"></div>
+      <span class="text-gray-600" id="current-user-name">admin</span>
+      <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white" id="current-user-avatar">A</div>
     </div>
   </header>
-
+  
   <main class="content">
-    <!-- 欢迎提示 -->
-    <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-sm p-6 mb-6 text-white" id="welcome-card">
-      <h2 class="text-xl font-bold mb-2" id="welcome-title"></h2>
-      <p id="welcome-desc"></p>
-    </div>
-
-    <!-- 统计卡片 -->
-    <div class="grid grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <div class="stat-card flex items-center gap-4">
-        <div class="stat-icon bg-gradient-to-br from-blue-400 to-blue-600"><i class="fa fa-file-text-o"></i></div>
+        <div class="stat-icon bg-blue-100 text-blue-500"><i class="fa fa-file-text"></i></div>
         <div>
-          <h3 class="text-2xl font-bold text-gray-800">6</h3>
-          <p class="text-sm text-gray-500">文章总数</p>
+          <div class="stat-value" id="stat-articles">0</div>
+          <div class="stat-label">文章总数</div>
         </div>
       </div>
       <div class="stat-card flex items-center gap-4">
-        <div class="stat-icon bg-gradient-to-br from-green-400 to-green-600"><i class="fa fa-pencil"></i></div>
+        <div class="stat-icon bg-green-100 text-green-500"><i class="fa fa-comment"></i></div>
         <div>
-          <h3 class="text-2xl font-bold text-gray-800">0</h3>
-          <p class="text-sm text-gray-500">草稿数量</p>
+          <div class="stat-value" id="stat-comments">0</div>
+          <div class="stat-label">评论总数</div>
         </div>
       </div>
       <div class="stat-card flex items-center gap-4">
-        <div class="stat-icon bg-gradient-to-br from-orange-400 to-orange-600"><i class="fa fa-comment"></i></div>
+        <div class="stat-icon bg-yellow-100 text-yellow-500"><i class="fa fa-eye"></i></div>
         <div>
-          <h3 class="text-2xl font-bold text-gray-800">2</h3>
-          <p class="text-sm text-gray-500">评论总数</p>
+          <div class="stat-value" id="stat-views">0</div>
+          <div class="stat-label">总浏览量</div>
         </div>
       </div>
       <div class="stat-card flex items-center gap-4">
-        <div class="stat-icon bg-gradient-to-br from-gray-400 to-gray-600"><i class="fa fa-eye"></i></div>
+        <div class="stat-icon bg-purple-100 text-purple-500"><i class="fa fa-user"></i></div>
         <div>
-          <h3 class="text-2xl font-bold text-gray-800">448</h3>
-          <p class="text-sm text-gray-500">总浏览量</p>
+          <div class="stat-value" id="stat-users">0</div>
+          <div class="stat-label">用户总数</div>
         </div>
       </div>
     </div>
 
-    <!-- 内容区域 -->
-    <div class="grid grid-cols-3 gap-4">
-      <!-- 左侧 - 文章列表（管理员可见） -->
-      <div class="col-span-2 bg-white rounded-lg shadow-sm p-6" id="admin-panel">
-        <h4 class="font-semibold text-gray-800 mb-4">最近热门文章</h4>
-        <table class="w-full">
-          <thead>
-            <tr class="text-left text-sm text-gray-500">
-              <th class="pb-3">标题</th>
-              <th class="pb-3">分类</th>
-              <th class="pb-3 text-center">浏览</th>
-              <th class="pb-3 text-center">评论</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="border-t border-gray-100">
-              <td class="py-3 text-sm">Welcome to Blog System</td>
-              <td class="py-3 text-sm text-gray-500">技术</td>
-              <td class="py-3 text-sm text-center">130</td>
-              <td class="py-3 text-sm text-center">5</td>
-            </tr>
-            <tr class="border-t border-gray-100">
-              <td class="py-3 text-sm">Spring Boot 入门教程</td>
-              <td class="py-3 text-sm text-gray-500">技术</td>
-              <td class="py-3 text-sm text-center">98</td>
-              <td class="py-3 text-sm text-center">3</td>
-            </tr>
-            <tr class="border-t border-gray-100">
-              <td class="py-3 text-sm">Vue3 Composition API详解</td>
-              <td class="py-3 text-sm text-gray-500">技术</td>
-              <td class="py-3 text-sm text-center">75</td>
-              <td class="py-3 text-sm text-center">2</td>
-            </tr>
-          </tbody>
-        </table>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+          <i class="fa fa-file-text-o"></i> 最近文章
+        </h2>
+        <div class="space-y-3" id="recent-articles">
+          <div class="text-center text-gray-400 py-8">加载中...</div>
+        </div>
       </div>
 
-      <div class="space-y-4">
-        <!-- 快捷操作 -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-          <h4 class="font-semibold text-gray-800 mb-4">快捷操作</h4>
-          <div class="grid grid-cols-2 gap-3">
-            <button class="quick-btn bg-blue-500" onclick="location.href='/1111/admin/article-edit.html'">写文章</button>
-            <button class="quick-btn bg-green-500 admin-only" onclick="location.href='/1111/admin/categories.html'">管理分类</button>
-            <button class="quick-btn bg-orange-500" onclick="location.href='/1111/admin/comments.html'">审核评论</button>
-            <button class="quick-btn bg-gray-500 admin-only" onclick="location.href='/1111/admin/statistics.html'">查看统计</button>
-          </div>
-        </div>
-
-        <!-- 用户信息 -->
-        <div class="bg-white rounded-lg shadow-sm p-6" id="user-info-panel">
-          <h4 class="font-semibold text-gray-800 mb-4">账号信息</h4>
-          <div class="space-y-2 text-sm">
-            <p><span class="text-gray-500">用户名</span> <span class="float-right" id="info-username">-</span></p>
-            <p><span class="text-gray-500">昵称</span> <span class="float-right" id="info-nickname">-</span></p>
-            <p><span class="text-gray-500">角色</span> <span class="float-right" id="info-role">-</span></p>
-            <p><span class="text-gray-500">注册时间</span> <span class="float-right" id="info-date">-</span></p>
-          </div>
-        </div>
-
-        <!-- 系统信息（仅管理员） -->
-        <div class="bg-white rounded-lg shadow-sm p-6 admin-only">
-          <h4 class="font-semibold text-gray-800 mb-4">系统信息</h4>
-          <div class="space-y-2 text-sm">
-            <p><span class="text-gray-500">系统版本</span> <span class="float-right">v1.0.0</span></p>
-            <p><span class="text-gray-500">后端框架</span> <span class="float-right">Spring Boot 2.7</span></p>
-            <p><span class="text-gray-500">前端框架</span> <span class="float-right">Vue 3</span></p>
-            <p><span class="text-gray-500">数据库</span> <span class="float-right">MySQL 8.0</span></p>
-          </div>
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+          <i class="fa fa-comments-o"></i> 最近评论
+        </h2>
+        <div class="space-y-3" id="recent-comments">
+          <div class="text-center text-gray-400 py-8">加载中...</div>
         </div>
       </div>
     </div>
@@ -173,58 +111,139 @@
 </div>
 
 <script>
-// 检查用户登录状态
-function checkAuth() {
-  const currentUser = JSON.parse(localStorage.getItem('current_user') || 'null');
-  if (!currentUser) {
-    alert('请先登录');
-    location.href = '/1111/login.html';
-    return null;
-  }
-  return currentUser;
+const user = JSON.parse(localStorage.getItem('current_user') || 'null');
+if (!user) {
+  alert('请先登录');
+  location.href = '/1111/login.html';
 }
 
-function initPage() {
-  const user = checkAuth();
-  if (!user) return;
+const isAdmin = user && user.role === 1;
 
-  const isAdmin = user.role === 'ADMIN';
+document.getElementById('current-user-name').textContent = user.nickname || user.username;
+document.getElementById('current-user-avatar').textContent = (user.nickname || user.username).charAt(0).toUpperCase();
 
-  // 显示用户信息
-  document.getElementById('user-display').textContent = user.nickname || user.username;
-  document.getElementById('user-avatar').textContent = (user.nickname || user.username).charAt(0).toUpperCase();
+if (!isAdmin) {
+  document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+}
 
-  // 显示角色标签
-  if (isAdmin) {
-    document.getElementById('role-badge').innerHTML = '<span class="admin-badge">管理员</span>';
-  } else {
-    document.getElementById('role-badge').innerHTML = '<span class="user-badge">普通用户</span>';
-  }
+const today = new Date();
+const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+document.getElementById('current-date').textContent = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日 ${weekdays[today.getDay()]}`;
 
-  // 显示欢迎信息
-  if (isAdmin) {
-    document.getElementById('welcome-title').textContent = '欢迎回来，管理员 ' + user.nickname;
-    document.getElementById('welcome-desc').textContent = '您拥有完整的管理权限，可以管理文章、分类、用户等';
-  } else {
-    document.getElementById('welcome-title').textContent = '欢迎回来，' + user.nickname;
-    document.getElementById('welcome-desc').textContent = '您可以撰写文章、管理评论、查看个人信息';
-  }
-
-  // 显示账号信息
-  document.getElementById('info-username').textContent = user.username;
-  document.getElementById('info-nickname').textContent = user.nickname;
-  document.getElementById('info-role').textContent = isAdmin ? '管理员' : '普通用户';
-  document.getElementById('info-date').textContent = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-';
-
-  // 隐藏非管理员元素
-  if (!isAdmin) {
-    document.querySelectorAll('.admin-only').forEach(el => {
-      el.style.display = 'none';
-    });
+async function loadStats() {
+  try {
+    const result = await BlogAPI.getStatistics();
+    if (result.code === 200) {
+      const data = result.data;
+      document.getElementById('stat-articles').textContent = data.articleCount || 0;
+      document.getElementById('stat-comments').textContent = data.commentCount || 0;
+      document.getElementById('stat-views').textContent = data.totalViews || 0;
+      document.getElementById('stat-users').textContent = data.userCount || 0;
+    }
+  } catch (error) {
+    console.error('加载统计数据失败', error);
+    document.getElementById('stat-articles').textContent = '-';
+    document.getElementById('stat-comments').textContent = '-';
+    document.getElementById('stat-views').textContent = '-';
+    document.getElementById('stat-users').textContent = '-';
   }
 }
 
-initPage();
+async function loadRecentArticles() {
+  try {
+    const result = await BlogAPI.getArticleList({ page: 1, size: 5 });
+    if (result.code === 200) {
+      const articles = result.data.list || [];
+      const container = document.getElementById('recent-articles');
+      container.innerHTML = '';
+      
+      if (articles.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-400 py-4">暂无文章</div>';
+        return;
+      }
+      
+      articles.forEach(article => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between p-3 border-b border-gray-100 last:border-0';
+        div.innerHTML = `
+          <div class="flex-1">
+            <div class="font-medium text-gray-800">${article.title}</div>
+            <div class="text-sm text-gray-500">${article.authorName || article.username} · ${formatDate(article.createTime)}</div>
+          </div>
+          <div class="flex items-center gap-4 text-sm text-gray-400">
+            <span><i class="fa fa-eye"></i> ${article.viewCount || 0}</span>
+            <span><i class="fa fa-comment"></i> ${article.commentCount || 0}</span>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+  } catch (error) {
+    console.error('加载文章失败', error);
+    document.getElementById('recent-articles').innerHTML = '<div class="text-center text-gray-400 py-4">加载失败</div>';
+  }
+}
+
+async function loadRecentComments() {
+  try {
+    const result = await BlogAPI.getCommentList({ page: 1, size: 5 });
+    if (result.code === 200) {
+      const comments = result.data.list || [];
+      const container = document.getElementById('recent-comments');
+      container.innerHTML = '';
+      
+      if (comments.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-400 py-4">暂无评论</div>';
+        return;
+      }
+      
+      comments.forEach(comment => {
+        const div = document.createElement('div');
+        div.className = 'flex items-start gap-3 p-3 border-b border-gray-100 last:border-0';
+        div.innerHTML = `
+          <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+            ${(comment.username || 'U').charAt(0).toUpperCase()}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-gray-800 text-sm">${comment.username}</span>
+              <span class="text-xs text-gray-400">${formatDate(comment.createTime)}</span>
+            </div>
+            <div class="text-sm text-gray-600 mt-1 truncate">${comment.content}</div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+  } catch (error) {
+    console.error('加载评论失败', error);
+    document.getElementById('recent-comments').innerHTML = '<div class="text-center text-gray-400 py-4">加载失败</div>';
+  }
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  
+  if (days === 0) {
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    if (hours === 0) {
+      const minutes = Math.floor(diff / (1000 * 60));
+      return minutes <= 0 ? '刚刚' : `${minutes}分钟前`;
+    }
+    return `${hours}小时前`;
+  } else if (days < 7) {
+    return `${days}天前`;
+  }
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+loadStats();
+loadRecentArticles();
+loadRecentComments();
 </script>
 </body>
 </html>
