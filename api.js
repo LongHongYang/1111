@@ -99,6 +99,11 @@ const BlogAPI = {
     });
   },
   
+  async getUserList(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/user/list?${query}`);
+  },
+  
   async updateUserStatus(id, status) {
     return this.request(`/user/status/${id}`, {
       method: 'PUT',
