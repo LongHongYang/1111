@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -6,6 +6,7 @@
   <title>文章详情 - 个人博客</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="api.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
     .header-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
@@ -73,8 +74,8 @@
         <!-- 操作栏 -->
         <div class="px-8 py-4 border-t border-gray-100 flex justify-between items-center">
           <div class="flex gap-4">
-            <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 flex items-center gap-2">
-              <i class="fa fa-thumbs-up"></i> 点赞 <span id="like-count">10</span>
+            <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 flex items-center gap-2" onclick="handleLike()">
+              <i class="fa fa-thumbs-up"></i> 点赞 <span id="like-count">0</span>
             </button>
             <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 flex items-center gap-2">
               <i class="fa fa-bookmark-o"></i> 收藏
@@ -92,16 +93,18 @@
 
         <!-- 评论区 -->
         <div class="px-8 py-6 bg-gray-50">
-          <h3 class="font-semibold text-gray-800 mb-4">评论 <span id="comment-count">(2)</span></h3>
+          <h3 class="font-semibold text-gray-800 mb-4">评论 <span id="comment-count">(0)</span></h3>
           
           <!-- 发表评论 -->
           <div class="bg-white border border-gray-200 rounded-lg p-4 mb-6">
             <div class="flex gap-3">
-              <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">U</div>
+              <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
+                <span id="current-user-avatar">U</span>
+              </div>
               <div class="flex-1">
-                <textarea class="w-full h-20 border border-gray-200 rounded-lg p-3 resize-none focus:outline-none focus:border-blue-500" placeholder="写下你的评论..."></textarea>
+                <textarea class="w-full h-20 border border-gray-200 rounded-lg p-3 resize-none focus:outline-none focus:border-blue-500" id="comment-input" placeholder="写下你的评论..."></textarea>
                 <div class="flex justify-end mt-3">
-                  <button class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">发表评论</button>
+                  <button class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" onclick="submitComment()">发表评论</button>
                 </div>
               </div>
             </div>
@@ -117,95 +120,14 @@
     <aside class="lg:col-span-1">
       <div class="sidebar-card">
         <h4 class="font-semibold text-gray-800 mb-4">相关推荐</h4>
-        <div class="space-y-3">
-          <div class="related-item cursor-pointer" onclick="location.href = '/1111/article.html?id=2'">
-            <div class="text-sm text-gray-700 truncate">Spring Boot 入门教程</div>
-            <div class="flex justify-between mt-1 text-xs text-gray-400">
-              <span>98 阅读</span>
-              <span>2026-06-03</span>
-            </div>
-          </div>
-          <div class="related-item cursor-pointer" onclick="location.href = '/1111/article.html?id=3'">
-            <div class="text-sm text-gray-700 truncate">Vue3 Composition API详解</div>
-            <div class="flex justify-between mt-1 text-xs text-gray-400">
-              <span>75 阅读</span>
-              <span>2026-06-02</span>
-            </div>
-          </div>
-        </div>
+        <div class="space-y-3" id="related-articles"></div>
       </div>
     </aside>
   </div>
 </main>
 
 <script>
-const articles = {
-  1: {
-    title: 'Welcome to Blog System',
-    content: '# Welcome\n\nThis is a **Spring Boot + Vue3** blog system.\n\n## Features\n\n- Article management\n- Category and tags\n- Comment system\n- User authentication\n\n## Getting Started\n\n```java\n@SpringBootApplication\npublic class BlogApplication {\n    public static void main(String[] args) {\n        SpringApplication.run(BlogApplication.class, args);\n    }\n}\n```\n\n> This is a quote.\n\n### Technologies\n\n- Java 17\n- Spring Boot 2.7\n- Vue 3\n- MySQL 8.0',
-    categoryName: '技术',
-    authorName: 'admin',
-    viewCount: 130,
-    commentCount: 5,
-    createTime: '2026-06-04',
-    tags: ['Java', 'Spring', 'Vue']
-  },
-  2: {
-    title: 'Spring Boot 入门教程',
-    content: '# Spring Boot 入门\n\nSpring Boot makes it easy to create stand-alone, production-grade Spring based Applications.\n\n## 环境要求\n\n- JDK 8+\n- Maven 3.6+\n\n## 创建项目\n\n使用 Spring Initializr 创建新项目，选择以下依赖：\n\n- Spring Web\n- Spring Data JPA\n- MySQL Driver\n\n## 配置文件\n\n```yaml\nserver:\n  port: 8080\n\nspring:\n  datasource:\n    url: jdbc:mysql://localhost:3306/blog\n    username: root\n    password: 123456\n```',
-    categoryName: '技术',
-    authorName: 'admin',
-    viewCount: 98,
-    commentCount: 3,
-    createTime: '2026-06-03',
-    tags: ['Java', 'Spring']
-  },
-  3: {
-    title: 'Vue3 Composition API详解',
-    content: '# Vue3 Composition API\n\nThe Composition API is a set of additive, function-based APIs that allow flexible composition of component logic.\n\n## 基本用法\n\n```javascript\nimport { ref, computed } from \'vue\'\n\nconst count = ref(0)\nconst double = computed(() => count.value * 2)\n\nfunction increment() {\n  count.value++\n}\n```\n\n## 响应式原理\n\nVue3 使用 Proxy 实现响应式系统，相比 Vue2 的 Object.defineProperty 有更好的性能和更完整的响应式能力。',
-    categoryName: '技术',
-    authorName: 'admin',
-    viewCount: 75,
-    commentCount: 2,
-    createTime: '2026-06-02',
-    tags: ['Vue', '前端']
-  },
-  4: {
-    title: '周末爬山记',
-    content: '# 周末爬山记\n\n周末天气不错，和朋友们一起去爬了附近的山。\n\n## 准备工作\n\n- 运动鞋\n- 水和食物\n- 防晒霜\n\n## 爬山过程\n\n山路不算太陡，但也需要一定的体力。沿途风景很美，空气清新。\n\n## 山顶风景\n\n到达山顶后，视野开阔，可以看到整个城市的景色。大家一起拍照留念，分享美食。',
-    categoryName: '生活',
-    authorName: 'admin',
-    viewCount: 45,
-    commentCount: 4,
-    createTime: '2026-06-01',
-    tags: ['生活']
-  },
-  5: {
-    title: '阅读笔记：深入理解计算机系统',
-    content: '# 深入理解计算机系统\n\n这本书是计算机专业的经典教材，涵盖了计算机系统的各个方面。\n\n## 核心概念\n\n1. **计算机系统概述**\n2. **信息的表示和处理**\n3. **程序的机器级表示**\n4. **处理器架构**\n5. **存储器层次结构**\n\n## 学习收获\n\n通过阅读这本书，我对计算机系统有了更深入的理解，也提高了编写高效代码的能力。',
-    categoryName: '随笔',
-    authorName: 'admin',
-    viewCount: 32,
-    commentCount: 1,
-    createTime: '2026-05-31',
-    tags: ['随笔', '阅读']
-  },
-  6: {
-    title: 'Java 8 新特性详解',
-    content: '# Java 8 新特性\n\nJava 8 引入了许多重要的新特性，改变了 Java 编程的方式。\n\n## Lambda 表达式\n\n```java\nList<String> list = Arrays.asList(\"a\", \"b\", \"c\");\nlist.forEach(s -> System.out.println(s));\n```\n\n## Stream API\n\n```java\nList<String> filtered = list.stream()\n    .filter(s -> s.startsWith(\"a\"))\n    .collect(Collectors.toList());\n```',
-    categoryName: '技术',
-    authorName: 'admin',
-    viewCount: 68,
-    commentCount: 2,
-    createTime: '2026-05-30',
-    tags: ['Java']
-  }
-};
-
-const comments = [
-  { id: 1, content: '非常棒的文章！学到了很多。', author: 'user1', time: '2026-06-05' },
-  { id: 2, content: '期待更多教程！', author: 'user2', time: '2026-06-06' }
-];
+let currentArticleId = 0;
 
 function parseMarkdown(text) {
   return text
@@ -220,16 +142,63 @@ function parseMarkdown(text) {
     .replace(/\n/gim, '<br>');
 }
 
-function renderComments() {
+async function loadArticle(id) {
+  try {
+    const result = await BlogAPI.getArticle(id);
+    if (result.code === 200) {
+      const article = result.data;
+      currentArticleId = article.id;
+      
+      document.getElementById('article-title').textContent = article.title;
+      document.getElementById('article-category').textContent = article.categoryName || '未分类';
+      document.getElementById('article-author').textContent = article.authorName || '未知作者';
+      document.getElementById('article-date').textContent = article.createTime ? article.createTime.substring(0, 10) : '';
+      document.getElementById('article-views').textContent = article.viewCount || 0;
+      document.getElementById('article-comments').textContent = article.commentCount || 0;
+      document.getElementById('comment-count').textContent = `(${article.commentCount || 0})`;
+      document.getElementById('like-count').textContent = article.likeCount || 0;
+      
+      document.getElementById('article-tags').innerHTML = article.tags ? article.tags.map(tag => 
+        `<span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm">${tag.name || tag}</span>`
+      ).join('') : '';
+
+      document.getElementById('article-content').innerHTML = parseMarkdown(article.content || '');
+      
+      loadComments(id);
+      loadRelatedArticles(id, article.categoryId);
+    }
+  } catch (error) {
+    console.error('加载文章失败:', error);
+    document.getElementById('article-content').innerHTML = '<p>加载文章失败，请稍后重试</p>';
+  }
+}
+
+async function loadComments(articleId) {
+  try {
+    const result = await BlogAPI.getComments(articleId);
+    if (result.code === 200) {
+      renderComments(result.data);
+    }
+  } catch (error) {
+    console.error('加载评论失败:', error);
+  }
+}
+
+function renderComments(comments) {
   const list = document.getElementById('comment-list');
+  if (!comments || comments.length === 0) {
+    list.innerHTML = '<p class="text-center text-gray-400 py-8">暂无评论，快来发表第一条评论吧！</p>';
+    return;
+  }
+  
   list.innerHTML = comments.map(comment => `
     <div class="comment-item">
       <div class="flex gap-3">
-        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">${comment.author.charAt(0).toUpperCase()}</div>
+        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">${(comment.authorName || 'U').charAt(0).toUpperCase()}</div>
         <div class="flex-1">
           <div class="flex items-center gap-2 mb-2">
-            <span class="font-medium text-gray-800">${comment.author}</span>
-            <span class="text-xs text-gray-400">${comment.time}</span>
+            <span class="font-medium text-gray-800">${comment.authorName || '匿名用户'}</span>
+            <span class="text-xs text-gray-400">${comment.createTime ? comment.createTime.substring(0, 16) : ''}</span>
           </div>
           <p class="text-gray-600">${comment.content}</p>
           <button class="text-sm text-blue-500 mt-2 hover:underline">回复</button>
@@ -239,26 +208,88 @@ function renderComments() {
   `).join('');
 }
 
+async function submitComment() {
+  const content = document.getElementById('comment-input').value.trim();
+  if (!content) {
+    alert('请输入评论内容');
+    return;
+  }
+  
+  const user = JSON.parse(localStorage.getItem('current_user') || 'null');
+  if (!user) {
+    alert('请先登录');
+    location.href = '/1111/login.html';
+    return;
+  }
+  
+  try {
+    const result = await BlogAPI.submitComment({
+      articleId: currentArticleId,
+      content: content
+    });
+    
+    if (result.code === 200) {
+      alert('评论发表成功');
+      document.getElementById('comment-input').value = '';
+      loadComments(currentArticleId);
+    } else {
+      alert(result.msg || '评论失败');
+    }
+  } catch (error) {
+    alert('评论失败，请检查后端服务是否正常');
+    console.error(error);
+  }
+}
+
+async function loadRelatedArticles(articleId, categoryId) {
+  try {
+    const result = await BlogAPI.getRelatedArticles(articleId, categoryId, 5);
+    if (result.code === 200) {
+      const container = document.getElementById('related-articles');
+      container.innerHTML = result.data.map(article => `
+        <div class="related-item cursor-pointer" onclick="location.href = '/1111/article.html?id=${article.id}'">
+          <div class="text-sm text-gray-700 truncate">${article.title}</div>
+          <div class="flex justify-between mt-1 text-xs text-gray-400">
+            <span>${article.viewCount || 0} 阅读</span>
+            <span>${article.createTime ? article.createTime.substring(0, 10) : ''}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+  } catch (error) {
+    console.error('加载相关文章失败:', error);
+  }
+}
+
+async function handleLike() {
+  const user = JSON.parse(localStorage.getItem('current_user') || 'null');
+  if (!user) {
+    alert('请先登录');
+    location.href = '/1111/login.html';
+    return;
+  }
+  
+  try {
+    const result = await BlogAPI.likeArticle(currentArticleId);
+    if (result.code === 200) {
+      const likeCount = document.getElementById('like-count');
+      likeCount.textContent = parseInt(likeCount.textContent) + 1;
+    }
+  } catch (error) {
+    console.error('点赞失败:', error);
+  }
+}
+
 function init() {
   const params = new URLSearchParams(window.location.search);
   const id = parseInt(params.get('id')) || 1;
-  const article = articles[id] || articles[1];
-
-  document.getElementById('article-title').textContent = article.title;
-  document.getElementById('article-category').textContent = article.categoryName;
-  document.getElementById('article-author').textContent = article.authorName;
-  document.getElementById('article-date').textContent = article.createTime;
-  document.getElementById('article-views').textContent = article.viewCount;
-  document.getElementById('article-comments').textContent = article.commentCount;
-  document.getElementById('comment-count').textContent = `(${article.commentCount})`;
   
-  document.getElementById('article-tags').innerHTML = article.tags.map(tag => 
-    `<span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm">${tag}</span>`
-  ).join('');
-
-  document.getElementById('article-content').innerHTML = parseMarkdown(article.content);
+  const user = JSON.parse(localStorage.getItem('current_user') || 'null');
+  if (user) {
+    document.getElementById('current-user-avatar').textContent = (user.username || user.nickname || 'U').charAt(0).toUpperCase();
+  }
   
-  renderComments();
+  loadArticle(id);
 }
 
 init();

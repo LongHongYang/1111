@@ -115,6 +115,47 @@ const BlogAPI = {
       method: 'PUT',
       body: JSON.stringify({ status })
     });
+  },
+  
+  async getArticle(id) {
+    return this.request(`/article/detail/${id}`);
+  },
+  
+  async getComments(articleId) {
+    return this.request(`/comment/list/${articleId}`);
+  },
+  
+  async submitComment(commentData) {
+    return this.request('/comment/save', {
+      method: 'POST',
+      body: JSON.stringify(commentData)
+    });
+  },
+  
+  async getAdminComments(pageNum, pageSize) {
+    return this.request(`/comment/admin/list?pageNum=${pageNum}&pageSize=${pageSize}`);
+  },
+  
+  async updateCommentStatus(id, status) {
+    return this.request(`/comment/admin/status/${id}?status=${status}`, {
+      method: 'PUT'
+    });
+  },
+  
+  async deleteComment(id) {
+    return this.request(`/comment/${id}`, {
+      method: 'DELETE'
+    });
+  },
+  
+  async getRelatedArticles(articleId, categoryId, limit) {
+    return this.request(`/article/related/${articleId}?categoryId=${categoryId}&limit=${limit}`);
+  },
+  
+  async likeArticle(id) {
+    return this.request(`/article/like/${id}`, {
+      method: 'POST'
+    });
   }
 };
 

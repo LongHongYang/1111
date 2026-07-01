@@ -1,4 +1,4 @@
-﻿﻿﻿﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -6,13 +6,7 @@
   <title>评论管理 - 博客管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  <script>
-    const currentUser = JSON.parse(localStorage.getItem('current_user') || 'null');
-    if (!currentUser) {
-      alert('请先登录');
-      location.href = '/1111/login.html';
-    }
-  </script>
+  <script src="../api.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
     .sidebar { width: 220px; background-color: #304156; min-height: 100vh; position: fixed; left: 0; top: 0; }
@@ -36,6 +30,7 @@
     .article-link { color: #909399; font-size: 13px; }
     .user-cell { display: flex; align-items: center; gap: 8px; justify-content: center; }
     .user-name { font-size: 13px; color: #606266; }
+    .admin-only { display: none; }
   </style>
 </head>
 <body>
@@ -50,12 +45,12 @@
     <a href="/1111/admin/dashboard.html"><i class="fa fa-dashboard"></i> 仪表盘</a>
     <a href="/1111/admin/articles.html"><i class="fa fa-file-text"></i> 文章管理</a>
     <a href="/1111/admin/article-edit.html"><i class="fa fa-pencil"></i> 写文章</a>
-    <a href="/1111/admin/categories.html"><i class="fa fa-folder"></i> 分类管理</a>
+    <a href="/1111/admin/categories.html" class="admin-only"><i class="fa fa-folder"></i> 分类管理</a>
     <a href="/1111/admin/comments.html" class="active"><i class="fa fa-comments"></i> 评论管理</a>
-    <a href="/1111/admin/users.html"><i class="fa fa-users"></i> 用户管理</a>
-    <a href="/1111/admin/statistics.html"><i class="fa fa-bar-chart"></i> 数据统计</a>
+    <a href="/1111/admin/users.html" class="admin-only"><i class="fa fa-users"></i> 用户管理</a>
+    <a href="/1111/admin/statistics.html" class="admin-only"><i class="fa fa-bar-chart"></i> 数据统计</a>
     <a href="/1111/admin/profile.html"><i class="fa fa-user"></i> 个人信息</a>
-    <a href="/1111/index.html" style="margin-top:20px;"><i class="fa fa-sign-out"></i> 退出登录</a>
+    <a href="/1111/index.html" onclick="BlogAPI.clearToken()"><i class="fa fa-sign-out"></i> 退出登录</a>
   </nav>
 </aside>
 
@@ -66,8 +61,8 @@
       <span class="text-lg font-semibold text-gray-800">评论管理</span>
     </div>
     <div class="flex items-center gap-3">
-      <span class="text-gray-600">admin</span>
-      <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">A</div>
+      <span class="text-gray-600" id="current-user-name">admin</span>
+      <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white" id="current-user-avatar">A</div>
     </div>
   </header>
   
@@ -75,7 +70,7 @@
     <!-- 筛选栏 -->
     <div class="bg-white rounded-lg shadow-sm p-4 mb-4 flex items-center gap-12">
       <span style="font-size:16px;font-weight:600;">评论列表</span>
-      <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded text-sm">共 2 条评论</span>
+      <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded text-sm">共 <span id="total-count">0</span> 条评论</span>
     </div>
 
     <!-- 评论表格 -->
@@ -91,56 +86,11 @@
             <th class="px-6 py-3 w-40 text-center">操作</th>
           </tr>
         </thead>
-        <tbody>
-          <tr class="border-t border-gray-100">
-            <td class="px-6 py-3 text-center">1</td>
-            <td class="px-6 py-3">
-              <p class="comment-content">非常棒的文章！学到了很多。</p>
-              <p class="article-link">文章：Welcome to Blog System</p>
-            </td>
-            <td class="px-6 py-3">
-              <div class="user-cell">
-                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-sm">U</div>
-                <span class="user-name">user1</span>
-              </div>
-            </td>
-            <td class="px-6 py-3 text-center">
-              <span class="px-2 py-1 bg-green-100 text-green-600 rounded text-xs">显示</span>
-            </td>
-            <td class="px-6 py-3 text-center text-sm">2026-06-05</td>
-            <td class="px-6 py-3 text-center">
-              <button class="table-btn mr-2" onclick="toggleStatus(1)">隐藏</button>
-              <button class="table-btn danger" onclick="deleteComment(1)">删除</button>
-            </td>
-          </tr>
-          <tr class="border-t border-gray-100">
-            <td class="px-6 py-3 text-center">2</td>
-            <td class="px-6 py-3">
-              <p class="comment-content">期待更多教程！</p>
-              <p class="article-link">文章：Welcome to Blog System</p>
-            </td>
-            <td class="px-6 py-3">
-              <div class="user-cell">
-                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-sm">U</div>
-                <span class="user-name">user2</span>
-              </div>
-            </td>
-            <td class="px-6 py-3 text-center">
-              <span class="px-2 py-1 bg-green-100 text-green-600 rounded text-xs">显示</span>
-            </td>
-            <td class="px-6 py-3 text-center text-sm">2026-06-06</td>
-            <td class="px-6 py-3 text-center">
-              <button class="table-btn mr-2" onclick="toggleStatus(2)">隐藏</button>
-              <button class="table-btn danger" onclick="deleteComment(2)">删除</button>
-            </td>
-          </tr>
+        <tbody id="comment-table-body">
         </tbody>
       </table>
       <div class="pagination-wrap">
-        <div class="pagination">
-          <button onclick="changePage(1)">首页</button>
-          <button class="active">1</button>
-          <button onclick="changePage(1)">下一页</button>
+        <div class="pagination" id="pagination">
         </div>
       </div>
     </div>
@@ -148,19 +98,130 @@
 </div>
 
 <script>
-function toggleStatus(id) {
-  alert('操作成功');
+let currentPage = 1;
+let totalPages = 1;
+
+function checkLogin() {
+  const user = JSON.parse(localStorage.getItem('current_user') || 'null');
+  if (!user) {
+    location.href = '/1111/login.html';
+    return false;
+  }
+  
+  document.getElementById('current-user-name').textContent = user.username || user.nickname || '用户';
+  document.getElementById('current-user-avatar').textContent = (user.username || user.nickname || 'U').charAt(0).toUpperCase();
+  
+  if (user.role === 1) {
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+  }
+  
+  return true;
 }
 
-function deleteComment(id) {
-  if (confirm('确定删除此评论吗？')) {
-    alert('删除成功');
+async function loadComments(pageNum = 1) {
+  if (!checkLogin()) return;
+  
+  try {
+    const result = await BlogAPI.getAdminComments(pageNum, 10);
+    if (result.code === 200) {
+      currentPage = pageNum;
+      totalPages = Math.ceil(result.data.total / 10);
+      document.getElementById('total-count').textContent = result.data.total;
+      renderComments(result.data.list);
+      renderPagination();
+    }
+  } catch (error) {
+    console.error('加载评论失败:', error);
   }
 }
 
-function changePage(page) {
-  alert(`跳转到第 ${page} 页`);
+function renderComments(comments) {
+  const tbody = document.getElementById('comment-table-body');
+  if (!comments || comments.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">暂无评论</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = comments.map(comment => `
+    <tr class="border-t border-gray-100">
+      <td class="px-6 py-3 text-center">${comment.id}</td>
+      <td class="px-6 py-3">
+        <p class="comment-content">${comment.content}</p>
+        <p class="article-link">文章：${comment.articleTitle || '未知文章'}</p>
+      </td>
+      <td class="px-6 py-3">
+        <div class="user-cell">
+          <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-sm">${(comment.authorName || 'U').charAt(0).toUpperCase()}</div>
+          <span class="user-name">${comment.authorName || '匿名用户'}</span>
+        </div>
+      </td>
+      <td class="px-6 py-3 text-center">
+        ${comment.status === 1 ? 
+          '<span class="px-2 py-1 bg-green-100 text-green-600 rounded text-xs">显示</span>' : 
+          '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">隐藏</span>'}
+      </td>
+      <td class="px-6 py-3 text-center text-sm">${comment.createTime ? comment.createTime.substring(0, 16) : ''}</td>
+      <td class="px-6 py-3 text-center">
+        <button class="table-btn mr-2" onclick="toggleStatus(${comment.id}, ${comment.status})">${comment.status === 1 ? '隐藏' : '显示'}</button>
+        <button class="table-btn danger" onclick="deleteComment(${comment.id})">删除</button>
+      </td>
+    </tr>
+  `).join('');
 }
+
+function renderPagination() {
+  const pagination = document.getElementById('pagination');
+  let html = '';
+  
+  html += `<button onclick="loadComments(${Math.max(1, currentPage - 1)})">上一页</button>`;
+  
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<button ${i === currentPage ? 'class="active"' : ''} onclick="loadComments(${i})">${i}</button>`;
+  }
+  
+  html += `<button onclick="loadComments(${Math.min(totalPages, currentPage + 1)})">下一页</button>`;
+  
+  pagination.innerHTML = html;
+}
+
+async function toggleStatus(id, currentStatus) {
+  const newStatus = currentStatus === 1 ? 0 : 1;
+  
+  try {
+    const result = await BlogAPI.updateCommentStatus(id, newStatus);
+    if (result.code === 200) {
+      loadComments(currentPage);
+    } else {
+      alert(result.msg || '操作失败');
+    }
+  } catch (error) {
+    alert('操作失败，请检查后端服务是否正常');
+    console.error(error);
+  }
+}
+
+async function deleteComment(id) {
+  if (!confirm('确定删除此评论吗？')) return;
+  
+  try {
+    const result = await BlogAPI.deleteComment(id);
+    if (result.code === 200) {
+      loadComments(currentPage);
+    } else {
+      alert(result.msg || '删除失败');
+    }
+  } catch (error) {
+    alert('删除失败，请检查后端服务是否正常');
+    console.error(error);
+  }
+}
+
+function init() {
+  if (!checkLogin()) return;
+  loadComments(1);
+}
+
+init();
 </script>
 </body>
 </html>
